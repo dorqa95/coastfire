@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="hu">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Coast FIRE kalkulátor</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
+<style>
+  :root {
+    color-scheme: light;
+    --page:           #f9f9f7;
+    --surface-1:      #fcfcfb;
+    --text-primary:   #0b0b0b;
+    --text-secondary: #52514e;
+    --text-muted:     #898781;
+    --grid:           #e1e0d9;
+    --baseline:       #c3c2b7;
+    --series-1:       #2a78d6; /* portfólió befizetésekkel */
+    --series-2:       #eb6834; /* coast célgörbe */
+    --series-3:       #1baf7a; /* Coast FIRE pont marker */
+    --good:           #006300;
+    --good-bg:        #0ca30c;
+    --critical:       #d03b3b;
+    --border:         rgba(11,11,11,0.10);
+    --shadow:         0 1px 2px rgba(11,11,11,0.04), 0 8px 24px rgba(11,11,11,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:           #0d0d0d;
+      --surface-1:      #1a1a19;
+      --text-primary:   #ffffff;
+      --text-secondary: #c3c2b7;
+      --text-muted:     #898781;
+      --grid:           #2c2c2a;
+      --baseline:       #383835;
+      --series-1:       #3987e5;
+      --series-2:       #d95926;
+      --series-3:       #199e70;
+      --good:           #0ca30c;
+      --good-bg:        #0ca30c;
+      --critical:       #e66767;
+      --border:         rgba(255,255,255,0.10);
+      --shadow:         0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:           #0d0d0d;
+    --surface-1:      #1a1a19;
+    --text-primary:   #ffffff;
+    --text-secondary: #c3c2b7;
+    --text-muted:     #898781;
+    --grid:           #2c2c2a;
+    --baseline:       #383835;
+    --series-1:       #3987e5;
+    --series-2:       #d95926;
+    --series-3:       #199e70;
+    --good:           #0ca30c;
+    --good-bg:        #0ca30c;
+    --critical:       #e66767;
+    --border:         rgba(255,255,255,0.10);
+    --shadow:         0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--page);
+    color: var(--text-primary);
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+  .wrap {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 20px 20px 60px;
+  }
+
+  header.top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 8px 4px 20px;
+  }
+  header.top h1 {
+    font-size: 22px;
+    font-weight: 650;
+    margin: 0 0 4px;
+    letter-spacing: -0.01em;
+  }
+  header.top p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    max-width: 60ch;
+  }
+  .theme-toggle {
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-secondary);
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 13px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .theme-toggle:hover { color: var(--text-primary); }
+
+  .card {
+    background: var(--surface-1);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    box-shadow: var(--shadow);
+  }
+
+  /* ---- Input panel ---- */
+  .input-card {
+    padding: 22px 24px 20px;
+    margin-bottom: 18px;
+  }
+  .input-card h2 {
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin: 0 0 16px;
+    font-weight: 600;
+  }
+  .input-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 18px 20px;
+  }
+  @media (max-width: 900px) {
+    .input-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .input-grid { grid-template-columns: 1fr; }
+  }
+  .field label {
+    display: block;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-bottom: 6px;
+    font-weight: 500;
+  }
+  .field input[type="text"],
+  .field input[type="number"] {
+    width: 100%;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-primary);
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--baseline);
+    padding: 6px 2px 8px;
+    font-family: inherit;
+    outline: none;
+    transition: border-color 0.15s ease;
+    font-variant-numeric: tabular-nums;
+  }
+  .field input:focus {
+    border-bottom-color: var(--series-1);
+  }
+  .field .suffix-row {
+    position: relative;
+  }
+  .field .unit {
+    position: absolute;
+    right: 2px;
+    bottom: 9px;
+    font-size: 12.5px;
+    color: var(--text-muted);
+    pointer-events: none;
+  }
+  .field.money input { padding-right: 32px; }
+
+  .pct-field .pct-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .pct-field input[type="range"] {
+    flex: 1;
+    accent-color: var(--series-1);
+    height: 4px;
+  }
+  .pct-field input[type="number"] {
+    width: 58px;
+    flex: none;
+    border-bottom: 2px solid var(--baseline);
+    text-align: right;
+  }
+  .pct-field .pct-unit {
+    font-size: 13px;
+    color: var(--text-muted);
+    width: 14px;
+  }
+
+  .error-banner {
+    display: none;
+    margin: -4px 0 16px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    background: color-mix(in srgb, var(--critical) 12%, var(--surface-1));
+    color: var(--critical);
+    font-size: 13.5px;
+    font-weight: 500;
+  }
+  .error-banner.show { display: block; }
+
+  /* ---- Results ---- */
+  .results-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 900px) {
+    .results-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 520px) {
+    .results-grid { grid-template-columns: 1fr; }
+  }
+  .stat {
+    padding: 18px 18px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .stat .label {
+    font-size: 12px;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .stat .value {
+    font-size: 25px;
+    font-weight: 650;
+    letter-spacing: -0.01em;
+    line-height: 1.2;
+  }
+  .stat .sub {
+    font-size: 12.5px;
+    color: var(--text-secondary);
+    margin-top: 2px;
+  }
+  .stat.accent .value { color: var(--series-1); }
+  .stat.ok .value { color: var(--good); }
+  .stat.warn .value { color: var(--critical); }
+  .stat .sub .tag {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-weight: 600;
+  }
+  .stat .sub .tag.good { color: var(--good); }
+  .stat .sub .tag.bad { color: var(--critical); }
+
+  /* ---- Chart ---- */
+  .chart-card {
+    padding: 22px 24px 14px;
+  }
+  .chart-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 4px;
+  }
+  .chart-head h2 {
+    font-size: 15px;
+    font-weight: 650;
+    margin: 0;
+  }
+  .legend {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    font-size: 12.5px;
+    color: var(--text-secondary);
+  }
+  .legend .key {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend .swatch {
+    width: 14px; height: 3px; border-radius: 2px;
+    display: inline-block;
+  }
+  .legend .swatch.dot {
+    width: 9px; height: 9px; border-radius: 3px;
+  }
+  .chart-wrap {
+    position: relative;
+    height: 380px;
+    margin-top: 10px;
+  }
+  .chart-note {
+    font-size: 12.5px;
+    color: var(--text-muted);
+    margin: 10px 2px 14px;
+    line-height: 1.5;
+  }
+
+  .explainer {
+    margin-top: 18px;
+    padding: 18px 22px;
+    font-size: 13.5px;
+    color: var(--text-secondary);
+    line-height: 1.6;
+  }
+  .explainer strong { color: var(--text-primary); }
+
+  footer.disclaimer {
+    margin-top: 18px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    line-height: 1.6;
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Coast FIRE kalkulátor</h1>
+      <p>Add meg az adataidat, és azonnal látod, mennyi idő múlva érheted el a Coast FIRE pontot - azt a tőkét, amely mellett a nyugdíjkori célod eléréséhez már nem szükséges tovább félretenned, csak hagyni kell dolgozni a hozamot.</p>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
+  </header>
+
+  <section class="card input-card">
+    <h2>Bemeneti adatok</h2>
+    <div class="error-banner" id="errorBanner"></div>
+    <div class="input-grid">
+
+      <div class="field">
+        <label for="currentAge">Jelenlegi életkor</label>
+        <div class="suffix-row">
+          <input type="number" id="currentAge" min="16" max="85" step="1" value="31.25">
+          <span class="unit">év</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="retireAge">Nyugdíj korhatár</label>
+        <div class="suffix-row">
+          <input type="number" id="retireAge" min="17" max="95" step="1" value="65">
+          <span class="unit">év</span>
+        </div>
+      </div>
+
+      <div class="field money">
+        <label for="monthlyContribution">Havi befizetés</label>
+        <div class="suffix-row">
+          <input type="text" inputmode="numeric" id="monthlyContribution" value="250 000">
+          <span class="unit">Ft</span>
+        </div>
+      </div>
+
+      <div class="field money">
+        <label for="currentInvestment">Jelenlegi befektetés összege</label>
+        <div class="suffix-row">
+          <input type="text" inputmode="numeric" id="currentInvestment" value="18 400 000">
+          <span class="unit">Ft</span>
+        </div>
+      </div>
+
+      <div class="field money">
+        <label for="targetWithdrawal">Cél havi kivét nyugdíjkor <span style="color:var(--text-muted); font-weight:400;">(mai értéken)</span></label>
+        <div class="suffix-row">
+          <input type="text" inputmode="numeric" id="targetWithdrawal" value="528 000">
+          <span class="unit">Ft</span>
+        </div>
+      </div>
+
+      <div class="field pct-field">
+        <label for="annualReturnNum">Portfólió hozama (évesített)</label>
+        <div class="pct-row">
+          <input type="range" id="annualReturn" min="0" max="15" step="0.1" value="10">
+          <input type="number" id="annualReturnNum" min="0" max="15" step="0.1" value="10">
+          <span class="pct-unit">%</span>
+        </div>
+      </div>
+
+      <div class="field pct-field">
+        <label for="annualInflationNum">Infláció (évesített)</label>
+        <div class="pct-row">
+          <input type="range" id="annualInflation" min="0" max="12" step="0.1" value="3.5">
+          <input type="number" id="annualInflationNum" min="0" max="12" step="0.1" value="3.5">
+          <span class="pct-unit">%</span>
+        </div>
+      </div>
+
+      <div class="field pct-field">
+        <label for="swrNum">SWR - biztonságos kivételi ráta</label>
+        <div class="pct-row">
+          <input type="range" id="swr" min="2" max="7" step="0.1" value="4">
+          <input type="number" id="swrNum" min="2" max="7" step="0.1" value="4">
+          <span class="pct-unit">%</span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <section class="results-grid">
+    <div class="card stat accent" id="statCoastTime">
+      <div class="label">Coast FIRE eléréséig</div>
+      <div class="value" id="valCoastTime">—</div>
+      <div class="sub" id="subCoastTime">&nbsp;</div>
+    </div>
+    <div class="card stat" id="statCoastAmount">
+      <div class="label">Coast FIRE összeg</div>
+      <div class="value" id="valCoastAmount">—</div>
+      <div class="sub" id="subCoastAmount">a keresztezési pontban szükséges tőke</div>
+    </div>
+    <div class="card stat" id="statTarget">
+      <div class="label">Szükséges tőke nyugdíjkor</div>
+      <div class="value" id="valTarget">—</div>
+      <div class="sub" id="subTarget">&nbsp;</div>
+    </div>
+    <div class="card stat" id="statFinal">
+      <div class="label">Portfólió értéke nyugdíjkor</div>
+      <div class="value" id="valFinal">—</div>
+      <div class="sub" id="subFinal">folyamatos befizetés esetén</div>
+    </div>
+  </section>
+
+  <section class="card chart-card">
+    <div class="chart-head">
+      <h2>Befektetés alakulása</h2>
+      <div class="legend">
+        <span class="key"><span class="swatch" style="background:var(--series-1)"></span>Portfólió (befizetésekkel)</span>
+        <span class="key"><span class="swatch" style="background:var(--series-2)"></span>Coast FIRE célgörbe</span>
+        <span class="key"><span class="swatch dot" style="background:var(--series-3)"></span>Coast FIRE pont elérve</span>
+      </div>
+    </div>
+    <div class="chart-wrap">
+      <canvas id="chart"></canvas>
+    </div>
+    <p class="chart-note" id="chartNote"></p>
+  </section>
+
+  <section class="card explainer">
+    <strong>Mi az a Coast FIRE?</strong> Az a pillanat, amikor a már felhalmozott megtakarításod - további befizetés nélkül, csak a hozam kamatos kamatával - magától eléri a nyugdíjkori célösszeget. A <em>Coast FIRE célgörbe</em> minden hónapra megmutatja, mekkora tőke kellene ahhoz, hogy onnantól befizetés nélkül is beérje a célt. Amint a portfóliód átlépi ezt a görbét, elméletileg megállhatsz a befizetésekkel.
+  </section>
+
+  <footer class="disclaimer">
+    A számítás egyszerűsített, kamatos kamatos modellt használ (havi tőkésítéssel), és nem veszi figyelembe az adózást, díjakat vagy a hozamok ingadozását. Kizárólag tájékoztató jellegű, nem minősül pénzügyi tanácsadásnak.
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  // ---------- Helpers ----------
+  const huf = new Intl.NumberFormat('hu-HU', { style: 'currency', currency: 'HUF', maximumFractionDigits: 0 });
+  const hufCompact = new Intl.NumberFormat('hu-HU', { notation: 'compact', compactDisplay: 'short', maximumFractionDigits: 1 });
+  const hufPlain = new Intl.NumberFormat('hu-HU', { maximumFractionDigits: 0 });
+
+  function parseMoney(el) {
+    const digits = el.value.replace(/[^\d]/g, '');
+    return digits ? parseInt(digits, 10) : 0;
+  }
+  function formatMoneyInput(el) {
+    const digits = el.value.replace(/[^\d]/g, '');
+    el.value = digits ? hufPlain.format(parseInt(digits, 10)) : '';
+  }
+  function formatDuration(months) {
+    const y = Math.floor(months / 12);
+    const m = months % 12;
+    if (y === 0 && m === 0) return 'most';
+    const parts = [];
+    if (y > 0) parts.push(y + (y === 1 ? ' év' : ' év'));
+    if (m > 0) parts.push(m + (m === 1 ? ' hónap' : ' hónap'));
+    return parts.join(' ');
+  }
+  function addMonths(date, months) {
+    const d = new Date(date.getTime());
+    d.setMonth(d.getMonth() + months);
+    return d;
+  }
+
+  // ---------- Elements ----------
+  const els = {
+    currentAge: document.getElementById('currentAge'),
+    retireAge: document.getElementById('retireAge'),
+    monthlyContribution: document.getElementById('monthlyContribution'),
+    currentInvestment: document.getElementById('currentInvestment'),
+    targetWithdrawal: document.getElementById('targetWithdrawal'),
+    annualReturn: document.getElementById('annualReturn'),
+    annualReturnNum: document.getElementById('annualReturnNum'),
+    annualInflation: document.getElementById('annualInflation'),
+    annualInflationNum: document.getElementById('annualInflationNum'),
+    swr: document.getElementById('swr'),
+    swrNum: document.getElementById('swrNum'),
+  };
+
+  const moneyInputs = [els.monthlyContribution, els.currentInvestment, els.targetWithdrawal];
+  moneyInputs.forEach(el => {
+    formatMoneyInput(el);
+    el.addEventListener('input', () => { formatMoneyInput(el); recalc(); });
+  });
+
+  // sync range <-> number pairs
+  function syncPair(rangeEl, numEl) {
+    rangeEl.addEventListener('input', () => { numEl.value = rangeEl.value; recalc(); });
+    numEl.addEventListener('input', () => {
+      let v = parseFloat(numEl.value);
+      if (isNaN(v)) return;
+      v = Math.min(parseFloat(rangeEl.max), Math.max(parseFloat(rangeEl.min), v));
+      rangeEl.value = v;
+      recalc();
+    });
+  }
+  syncPair(els.annualReturn, els.annualReturnNum);
+  syncPair(els.annualInflation, els.annualInflationNum);
+  syncPair(els.swr, els.swrNum);
+
+  [els.currentAge, els.retireAge].forEach(el => el.addEventListener('input', recalc));
+
+  // ---------- Theme toggle ----------
+  const themeToggle = document.getElementById('themeToggle');
+  let manualTheme = null;
+  themeToggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark' ||
+      (!document.documentElement.hasAttribute('data-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    manualTheme = isDark ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', manualTheme);
+    themeToggle.textContent = manualTheme === 'dark' ? '☀️' : '🌙';
+    updateChartTheme();
+    chart.update('none');
+  });
+
+  function cssVar(name) {
+    return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  }
+
+  // ---------- Coast FIRE simulation ----------
+  function simulate(input) {
+    const totalMonths = Math.round((input.retireAge - input.currentAge) * 12);
+    if (totalMonths <= 0) return null;
+
+    const rMonthly = Math.pow(1 + input.annualReturn, 1 / 12) - 1;
+    const infMonthly = Math.pow(1 + input.annualInflation, 1 / 12) - 1;
+
+    const futureMonthlyWithdrawal = input.targetWithdrawal * Math.pow(1 + infMonthly, totalMonths);
+    const futureAnnualWithdrawal = futureMonthlyWithdrawal * 12;
+    const fvTarget = futureAnnualWithdrawal / input.swr;
+
+    let portfolio = input.currentInvestment;
+    const portfolioSeries = [];
+    const targetSeries = [];
+    let coastMonth = null;
+    let coastValue = null;
+
+    for (let m = 0; m <= totalMonths; m++) {
+      const monthsRemaining = totalMonths - m;
+      const requiredNow = fvTarget / Math.pow(1 + rMonthly, monthsRemaining);
+      portfolioSeries.push({ x: m / 12, y: portfolio });
+      targetSeries.push({ x: m / 12, y: requiredNow });
+      if (coastMonth === null && portfolio >= requiredNow) {
+        coastMonth = m;
+        coastValue = portfolio;
+      }
+      if (m < totalMonths) {
+        portfolio = portfolio * (1 + rMonthly) + input.monthlyContribution;
+      }
+    }
+
+    const coastPoint = coastMonth !== null ? [{ x: coastMonth / 12, y: coastValue }] : [];
+
+    return {
+      totalMonths, fvTarget, coastMonth, coastValue,
+      finalPortfolio: portfolio, portfolioSeries, targetSeries, coastPoint,
+      futureMonthlyWithdrawal,
+    };
+  }
+
+  // ---------- Chart setup ----------
+  const ctx = document.getElementById('chart').getContext('2d');
+
+  const coastMarkerPlugin = {
+    id: 'coastMarker',
+    afterDatasetsDraw(chartInstance) {
+      const meta = chartInstance.$coastMarker;
+      if (!meta || meta.x == null) return;
+      const { ctx, chartArea, scales } = chartInstance;
+      const x = scales.x.getPixelForValue(meta.x);
+      if (x < chartArea.left || x > chartArea.right) return;
+      ctx.save();
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = cssVar('--text-muted');
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(x, chartArea.top);
+      ctx.lineTo(x, chartArea.bottom);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+    }
+  };
+
+  const chart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      datasets: [
+        {
+          label: 'Portfólió (befizetésekkel)',
+          data: [],
+          borderColor: cssVar('--series-1'),
+          backgroundColor: cssVar('--series-1') + '1a',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: cssVar('--series-1'),
+          pointHoverBorderColor: cssVar('--surface-1'),
+          pointHoverBorderWidth: 2,
+          fill: true,
+          tension: 0.15,
+          order: 2,
+        },
+        {
+          label: 'Coast FIRE célgörbe',
+          data: [],
+          borderColor: cssVar('--series-2'),
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: cssVar('--series-2'),
+          pointHoverBorderColor: cssVar('--surface-1'),
+          pointHoverBorderWidth: 2,
+          fill: false,
+          tension: 0.15,
+          order: 1,
+        },
+        {
+          label: 'Coast FIRE pont elérve',
+          data: [],
+          showLine: false,
+          borderColor: cssVar('--series-3'),
+          backgroundColor: cssVar('--series-3'),
+          pointStyle: 'rectRounded',
+          pointRadius: 7,
+          pointHoverRadius: 8,
+          pointBorderColor: cssVar('--surface-1'),
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: cssVar('--series-3'),
+          pointHoverBorderColor: cssVar('--surface-1'),
+          pointHoverBorderWidth: 2,
+          order: 0,
+        },
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      animation: { duration: 400 },
+      layout: { padding: { top: 4, right: 8 } },
+      scales: {
+        x: {
+          type: 'linear',
+          title: { display: true, text: 'Év (mostantól)', color: cssVar('--text-muted'), font: { size: 12 } },
+          ticks: {
+            color: cssVar('--text-muted'),
+            font: { size: 11 },
+            callback: (v) => Math.round(v) + ' év',
+          },
+          grid: { color: cssVar('--grid'), drawTicks: false },
+          border: { color: cssVar('--baseline') },
+        },
+        y: {
+          title: { display: true, text: 'Érték (Ft)', color: cssVar('--text-muted'), font: { size: 12 } },
+          ticks: {
+            color: cssVar('--text-muted'),
+            font: { size: 11 },
+            callback: (v) => hufCompact.format(v) + ' Ft',
+          },
+          grid: { color: cssVar('--grid'), drawTicks: false },
+          border: { display: false },
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: cssVar('--surface-1'),
+          titleColor: cssVar('--text-primary'),
+          bodyColor: cssVar('--text-secondary'),
+          borderColor: cssVar('--border'),
+          borderWidth: 1,
+          padding: 10,
+          titleFont: { size: 12, weight: '600' },
+          bodyFont: { size: 12 },
+          callbacks: {
+            title: (items) => items.length ? Math.round(items[0].parsed.x * 10) / 10 + ' év múlva' : '',
+            label: (item) => item.dataset.label + ': ' + huf.format(Math.round(item.parsed.y)),
+          }
+        }
+      }
+    },
+    plugins: [coastMarkerPlugin]
+  });
+
+  function updateChartTheme() {
+    chart.data.datasets[0].borderColor = cssVar('--series-1');
+    chart.data.datasets[0].backgroundColor = cssVar('--series-1') + '1a';
+    chart.data.datasets[0].pointHoverBackgroundColor = cssVar('--series-1');
+    chart.data.datasets[0].pointHoverBorderColor = cssVar('--surface-1');
+    chart.data.datasets[1].borderColor = cssVar('--series-2');
+    chart.data.datasets[1].pointHoverBackgroundColor = cssVar('--series-2');
+    chart.data.datasets[1].pointHoverBorderColor = cssVar('--surface-1');
+    chart.data.datasets[2].borderColor = cssVar('--series-3');
+    chart.data.datasets[2].backgroundColor = cssVar('--series-3');
+    chart.data.datasets[2].pointBorderColor = cssVar('--surface-1');
+    chart.data.datasets[2].pointHoverBackgroundColor = cssVar('--series-3');
+    chart.data.datasets[2].pointHoverBorderColor = cssVar('--surface-1');
+    chart.options.scales.x.ticks.color = cssVar('--text-muted');
+    chart.options.scales.x.title.color = cssVar('--text-muted');
+    chart.options.scales.x.grid.color = cssVar('--grid');
+    chart.options.scales.x.border.color = cssVar('--baseline');
+    chart.options.scales.y.ticks.color = cssVar('--text-muted');
+    chart.options.scales.y.title.color = cssVar('--text-muted');
+    chart.options.scales.y.grid.color = cssVar('--grid');
+    chart.options.plugins.tooltip.backgroundColor = cssVar('--surface-1');
+    chart.options.plugins.tooltip.titleColor = cssVar('--text-primary');
+    chart.options.plugins.tooltip.bodyColor = cssVar('--text-secondary');
+    chart.options.plugins.tooltip.borderColor = cssVar('--border');
+  }
+
+  // ---------- Recalculation ----------
+  const errorBanner = document.getElementById('errorBanner');
+
+  function recalc() {
+    const input = {
+      currentAge: parseFloat(els.currentAge.value),
+      retireAge: parseFloat(els.retireAge.value),
+      monthlyContribution: parseMoney(els.monthlyContribution),
+      currentInvestment: parseMoney(els.currentInvestment),
+      targetWithdrawal: parseMoney(els.targetWithdrawal),
+      annualReturn: parseFloat(els.annualReturnNum.value) / 100,
+      annualInflation: parseFloat(els.annualInflationNum.value) / 100,
+      swr: parseFloat(els.swrNum.value) / 100,
+    };
+
+    if (Object.values(input).some(v => isNaN(v))) return;
+
+    if (input.retireAge <= input.currentAge) {
+      errorBanner.textContent = 'A nyugdíj korhatárnak nagyobbnak kell lennie a jelenlegi életkornál.';
+      errorBanner.classList.add('show');
+      return;
+    }
+    if (input.swr <= 0) {
+      errorBanner.textContent = 'Az SWR-nek pozitívnak kell lennie.';
+      errorBanner.classList.add('show');
+      return;
+    }
+    errorBanner.classList.remove('show');
+
+    const result = simulate(input);
+    if (!result) return;
+
+    // ---- Chart ----
+    chart.data.datasets[0].data = result.portfolioSeries;
+    chart.data.datasets[1].data = result.targetSeries;
+    chart.data.datasets[2].data = result.coastPoint;
+    chart.$coastMarker = { x: result.coastMonth !== null ? result.coastMonth / 12 : null };
+    chart.update('none');
+
+    // ---- Stats ----
+    const valCoastTime = document.getElementById('valCoastTime');
+    const subCoastTime = document.getElementById('subCoastTime');
+    const statCoastTime = document.getElementById('statCoastTime');
+    const statCoastAmount = document.getElementById('statCoastAmount');
+    const valCoastAmount = document.getElementById('valCoastAmount');
+    const subCoastAmount = document.getElementById('subCoastAmount');
+    const chartNote = document.getElementById('chartNote');
+
+    if (result.coastMonth === null) {
+      valCoastTime.textContent = 'Nem éred el nyugdíjig';
+      statCoastTime.classList.remove('accent'); statCoastTime.classList.add('warn');
+      const gap = result.fvTarget - result.finalPortfolio;
+      subCoastTime.innerHTML = 'A jelenlegi paraméterekkel ' + huf.format(Math.round(gap)) + ' hiányzik nyugdíjkorra. Növeld a havi befizetést, vagy csökkentsd a célt.';
+      valCoastAmount.textContent = '—';
+      subCoastAmount.textContent = 'a keresztezési pontban szükséges tőke';
+      statCoastAmount.classList.remove('ok');
+      chartNote.textContent = 'A portfólió a Coast FIRE célgörbe alatt marad a teljes időszakban - a két görbe nem metszi egymást.';
+    } else {
+      statCoastTime.classList.remove('warn'); statCoastTime.classList.add('accent');
+      const today = new Date();
+      const coastDate = addMonths(today, result.coastMonth);
+      const dateStr = coastDate.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' });
+      if (result.coastMonth === 0) {
+        valCoastTime.textContent = 'Már elérted! 🎉';
+        subCoastTime.innerHTML = 'A jelenlegi tőkéd önmagában, további befizetés nélkül is eléri a nyugdíjkori célt.';
+      } else {
+        const ageAtCoast = Math.round((input.currentAge + result.coastMonth / 12) * 10) / 10;
+        valCoastTime.textContent = formatDuration(result.coastMonth);
+        subCoastTime.innerHTML = 'Várható időpont: <strong>' + dateStr + '</strong> (kb. ' + ageAtCoast + ' éves korodban)';
+      }
+      valCoastAmount.textContent = huf.format(Math.round(result.coastValue));
+      subCoastAmount.textContent = 'ekkora tőkénél állhatsz meg a befizetéssel';
+      statCoastAmount.classList.add('ok');
+      chartNote.textContent = 'A zöld jelölő és a szaggatott függőleges vonal mutatja, mikor keresztezi a portfóliód a Coast FIRE célgörbét - ettől a ponttól a felhalmozott tőke önmagában, további befizetés nélkül is eléri a nyugdíjkori célt.';
+    }
+
+    document.getElementById('valTarget').textContent = huf.format(Math.round(result.fvTarget));
+    document.getElementById('subTarget').innerHTML = 'havi ' + huf.format(Math.round(result.futureMonthlyWithdrawal)) + ' kivétet fedez ' + input.retireAge + ' éves kortól';
+
+    const valFinal = document.getElementById('valFinal');
+    const subFinal = document.getElementById('subFinal');
+    const statFinal = document.getElementById('statFinal');
+    valFinal.textContent = huf.format(Math.round(result.finalPortfolio));
+    if (result.finalPortfolio >= result.fvTarget) {
+      subFinal.innerHTML = '<span class="tag good">✓ eléri a célt</span> folyamatos befizetés esetén';
+      statFinal.classList.remove('warn'); statFinal.classList.add('ok');
+    } else {
+      subFinal.innerHTML = '<span class="tag bad">alatta marad a célnak</span> folyamatos befizetés esetén';
+      statFinal.classList.remove('ok'); statFinal.classList.add('warn');
+    }
+  }
+
+  recalc();
+})();
+</script>
+</body>
+</html>
