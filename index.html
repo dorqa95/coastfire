@@ -369,13 +369,13 @@
       <div class="field money">
         <label for="currentInvestment">Jelenlegi befektetés összege</label>
         <div class="suffix-row">
-          <input type="text" inputmode="numeric" id="currentInvestment" value="18 400 000">
+          <input type="text" inputmode="numeric" id="currentInvestment" value="18 500 000">
           <span class="unit">Ft</span>
         </div>
       </div>
 
       <div class="field money">
-        <label for="targetWithdrawal">Cél havi kivét nyugdíjkor <span style="color:var(--text-muted); font-weight:400;">(mai értéken)</span></label>
+        <label for="targetWithdrawal">Cél havi kivét nyugdíjkor <span style="color:var(--text-muted); font-weight:400;">mai értéken</span></label>
         <div class="suffix-row">
           <input type="text" inputmode="numeric" id="targetWithdrawal" value="528 000">
           <span class="unit">Ft</span>
@@ -383,16 +383,16 @@
       </div>
 
       <div class="field pct-field">
-        <label for="annualReturnNum">Portfólió hozama (évesített)</label>
+        <label for="annualReturnNum">Portfólió hozama / év</label>
         <div class="pct-row">
-          <input type="range" id="annualReturn" min="0" max="15" step="0.1" value="9.45">
-          <input type="number" id="annualReturnNum" min="0" max="15" step="0.1" value="9.45">
+          <input type="range" id="annualReturn" min="0" max="15" step="0.1" value="9.44">
+          <input type="number" id="annualReturnNum" min="0" max="15" step="0.1" value="9.44">
           <span class="pct-unit">%</span>
         </div>
       </div>
 
       <div class="field pct-field">
-        <label for="annualInflationNum">Infláció (évesített)</label>
+        <label for="annualInflationNum">Infláció / év</label>
         <div class="pct-row">
           <input type="range" id="annualInflation" min="0" max="12" step="0.1" value="2.63">
           <input type="number" id="annualInflationNum" min="0" max="12" step="0.1" value="2.63">
@@ -401,7 +401,7 @@
       </div>
 
       <div class="field pct-field">
-        <label for="swrNum">SWR - biztonságos kivételi ráta</label>
+        <label for="swrNum">Kivételi ráta / év <span style="color:var(--text-muted); font-weight:400;">(SWR)</span></label>
         <div class="pct-row">
           <input type="range" id="swr" min="2" max="7" step="0.1" value="3.5">
           <input type="number" id="swrNum" min="2" max="7" step="0.1" value="3.5">
