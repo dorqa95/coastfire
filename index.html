@@ -94,7 +94,7 @@
     margin: 0;
     color: var(--text-secondary);
     font-size: 14px;
-    max-width: 60ch;
+    /* max-width: 60ch; */
   }
   .theme-toggle {
     border: 1px solid var(--border);
@@ -321,7 +321,7 @@
     margin-top: 18px;
     font-size: 11.5px;
     color: var(--text-muted);
-    text-align: center;
+    text-align: left;
     line-height: 1.6;
   }
 </style>
@@ -332,7 +332,7 @@
   <header class="top">
     <div>
       <h1>Coast FIRE kalkulátor</h1>
-      <p>Add meg az adataidat, és azonnal látod, mennyi idő múlva érheted el a Coast FIRE pontot - azt a tőkét, amely mellett a nyugdíjkori célod eléréséhez már nem szükséges tovább félretenned, csak hagyni kell dolgozni a hozamot.</p>
+      <p>Kalkulálj saját adataiddal és azonnal láthatod mennyi idő múlva érheted el a Coast FIRE pontot, azaz azt a tőkét, amely mellett a nyugdíjkori célod eléréséhez már nem szükséges tovább félretenned, csak hagyni kell dolgozni a tőkéd.</p>
     </div>
     <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
   </header>
@@ -375,9 +375,9 @@
       </div>
 
       <div class="field money">
-        <label for="targetWithdrawal">Cél havi kivét nyugdíjkor <span style="color:var(--text-muted); font-weight:400;">mai értéken</span></label>
+        <label for="targetWithdrawal">Cél havi kivét nyugdíjkor <span style="color:var(--text-muted); font-weight:400;">(mai értéken)</span></label>
         <div class="suffix-row">
-          <input type="text" inputmode="numeric" id="targetWithdrawal" value="528 000">
+          <input type="text" inputmode="numeric" id="targetWithdrawal" value="525 000">
           <span class="unit">Ft</span>
         </div>
       </div>
@@ -438,9 +438,9 @@
     <div class="chart-head">
       <h2>Befektetés alakulása</h2>
       <div class="legend">
-        <span class="key"><span class="swatch" style="background:var(--series-1)"></span>Portfólió (befizetésekkel)</span>
+        <span class="key"><span class="swatch" style="background:var(--series-1)"></span>Tervezett portfólió (folyamatos befizetéssel)</span>
         <span class="key"><span class="swatch" style="background:var(--series-2)"></span>Coast FIRE célgörbe</span>
-        <span class="key"><span class="swatch dot" style="background:var(--series-3)"></span>Coast FIRE pont elérve</span>
+        <span class="key"><span class="swatch dot" style="background:var(--series-3)"></span>Coast FIRE pont</span>
       </div>
     </div>
     <div class="chart-wrap">
@@ -810,7 +810,7 @@
       valCoastAmount.textContent = huf.format(Math.round(result.coastValue));
       subCoastAmount.textContent = 'ekkora tőkénél állhatsz meg a befizetéssel';
       statCoastAmount.classList.add('ok');
-      chartNote.textContent = 'A zöld jelölő és a szaggatott függőleges vonal mutatja, mikor keresztezi a portfóliód a Coast FIRE célgörbét - ettől a ponttól a felhalmozott tőke önmagában, további befizetés nélkül is eléri a nyugdíjkori célt.';
+      chartNote.textContent = 'A zöld jelölő és a szaggatott függőleges vonal mutatja, mikor keresztezi a portfóliód a Coast FIRE célgörbét. Ettől a ponttól kezdve a felhalmozott tőke önmagában - további befizetések nélkül - is eléri a nyugdíjkori célt.';
     }
 
     document.getElementById('valTarget').textContent = huf.format(Math.round(result.fvTarget));
@@ -821,10 +821,10 @@
     const statFinal = document.getElementById('statFinal');
     valFinal.textContent = huf.format(Math.round(result.finalPortfolio));
     if (result.finalPortfolio >= result.fvTarget) {
-      subFinal.innerHTML = '<span class="tag good">✓ eléri a célt</span> folyamatos befizetés esetén';
+      subFinal.innerHTML = 'folyamatos befizetés esetén (<span class="tag good">✓ eléred a célod</span>)';
       statFinal.classList.remove('warn'); statFinal.classList.add('ok');
     } else {
-      subFinal.innerHTML = '<span class="tag bad">alatta marad a célnak</span> folyamatos befizetés esetén';
+      subFinal.innerHTML = 'folyamatos befizetés esetén (<span class="tag bad">nem éred el a célod</span>)';
       statFinal.classList.remove('ok'); statFinal.classList.add('warn');
     }
   }
