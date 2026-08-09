@@ -434,7 +434,7 @@
     <div class="card stat" id="statFinal">
       <div class="label">Portfólió értéke nyugdíjkor</div>
       <div class="value" id="valFinal">—</div>
-      <div class="sub" id="subFinal">folyamatos befizetés esetén</div>
+      <div class="sub" id="subFinal">folyamatos befizetés esetén<br>havi — jelenértéken</div>
     </div>
   </section>
 
@@ -836,12 +836,13 @@
     const valFinal = document.getElementById('valFinal');
     const subFinal = document.getElementById('subFinal');
     const statFinal = document.getElementById('statFinal');
+    const infMonthly = Math.pow(1 + input.annualInflation, 1 / 12) - 1;
+    const presentValueMonthlyWithdrawal = (result.finalPortfolio * input.swr / 12) / Math.pow(1 + infMonthly, result.totalMonths);
     valFinal.textContent = huf.format(Math.round(result.finalPortfolio));
+    subFinal.innerHTML = 'folyamatos befizetés esetén<br>havi ' + huf.format(Math.round(presentValueMonthlyWithdrawal)) + ' jelenértéken';
     if (result.finalPortfolio >= result.fvTarget) {
-      subFinal.innerHTML = 'folyamatos befizetés esetén (<span class="tag good">✓ eléred a célod</span>)';
       statFinal.classList.remove('warn'); statFinal.classList.add('ok');
     } else {
-      subFinal.innerHTML = 'folyamatos befizetés esetén (<span class="tag bad">nem éred el a célod</span>)';
       statFinal.classList.remove('ok'); statFinal.classList.add('warn');
     }
   }
