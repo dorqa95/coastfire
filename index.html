@@ -549,6 +549,11 @@
     return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
   }
 
+  function formatAgeLabel(age) {
+    const rounded = Math.round(age * 10) / 10;
+    return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
+  }
+
   // ---------- Coast FIRE simulation ----------
   function simulate(input) {
     const totalMonths = Math.round((input.retireAge - input.currentAge) * 12);
@@ -674,11 +679,14 @@
       scales: {
         x: {
           type: 'linear',
-          title: { display: true, text: 'Év (mostantól)', color: cssVar('--text-muted'), font: { size: 12 } },
+          title: { display: true, text: 'Életkor (év)', color: cssVar('--text-muted'), font: { size: 12 } },
           ticks: {
             color: cssVar('--text-muted'),
             font: { size: 11 },
-            callback: (v) => Math.round(v) + ' év',
+            callback: (v) => {
+              const currentAge = parseFloat(els.currentAge.value);
+              return formatAgeLabel(currentAge + Number(v)) + ' év';
+            },
           },
           grid: { color: cssVar('--grid'), drawTicks: false },
           border: { color: cssVar('--baseline') },
@@ -706,7 +714,12 @@
           titleFont: { size: 12, weight: '600' },
           bodyFont: { size: 12 },
           callbacks: {
-            title: (items) => items.length ? Math.round(items[0].parsed.x * 10) / 10 + ' év múlva' : '',
+            title: (items) => {
+              if (!items.length) return '';
+              const currentAge = parseFloat(els.currentAge.value);
+              const age = currentAge + items[0].parsed.x;
+              return formatAgeLabel(age) + ' évesen';
+            },
             label: (item) => item.dataset.label + ': ' + huf.format(Math.round(item.parsed.y)),
           }
         }
