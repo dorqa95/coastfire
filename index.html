@@ -128,6 +128,53 @@
     margin: 0 0 16px;
     font-weight: 600;
   }
+  .mode-switch {
+    display: inline-flex;
+    gap: 4px;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin: 0 0 18px;
+    background: color-mix(in srgb, var(--surface-1) 92%, var(--text-primary));
+  }
+  .mode-btn {
+    border: none;
+    background: transparent;
+    color: var(--text-secondary);
+    border-radius: 9px;
+    padding: 10px 14px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+  .mode-btn.active {
+    background: var(--surface-1);
+    color: var(--text-primary);
+    box-shadow: 0 1px 2px rgba(11,11,11,0.08);
+  }
+  .mode-specific-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 4px 0 14px;
+    color: var(--text-secondary);
+    font-size: 13px;
+  }
+  .mode-specific-toggle .pill {
+    font-size: 12px;
+    color: var(--series-1);
+    border: 1px solid color-mix(in srgb, var(--series-1) 40%, transparent);
+    background: color-mix(in srgb, var(--series-1) 14%, transparent);
+    border-radius: 999px;
+    padding: 3px 10px;
+    font-weight: 600;
+  }
+  .hidden { display: none !important; }
+  .mode-fields {
+    border-top: 1px solid var(--border);
+    margin-top: 8px;
+    padding-top: 14px;
+  }
   .input-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -293,6 +340,12 @@
     width: 14px; height: 3px; border-radius: 2px;
     display: inline-block;
   }
+  .legend .swatch.dashed {
+    background: transparent !important;
+    border-top: 3px dashed currentColor;
+    width: 16px;
+    height: 0;
+  }
   .legend .swatch.dot {
     width: 9px; height: 9px; border-radius: 3px;
   }
@@ -335,14 +388,19 @@
 
   <header class="top">
     <div>
-      <h1>Coast FIRE kalkulátor</h1>
-      <p>Kalkulálj saját adataiddal és azonnal láthatod mennyi idő múlva érheted el a Coast FIRE pontot, azaz azt a tőkét, amely mellett a nyugdíjkori célod eléréséhez már nem szükséges tovább félretenned, csak hagyni kell dolgozni a tőkéd.</p>
+      <h1>Coast FI(RE) kalkulátor</h1>
+      <p>Ugyanazzal a bemenettel nézd meg a Coast FI pontot, a korai FIRE dátumot és a két stratégia közti különbséget egy közös szimulációban.</p>
     </div>
     <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
   </header>
 
   <section class="card input-card">
     <h2>Bemeneti adatok</h2>
+    <div class="mode-switch" id="modeSwitch">
+      <button class="mode-btn active" data-mode="coast" type="button">Coast FI</button>
+      <button class="mode-btn" data-mode="fire" type="button">Korai FIRE</button>
+      <button class="mode-btn" data-mode="compare" type="button">Összehasonlítás</button>
+    </div>
     <div class="error-banner" id="errorBanner"></div>
     <div class="input-grid">
 
@@ -413,26 +471,57 @@
         </div>
       </div>
     </div>
+    <label class="mode-specific-toggle">
+      <input type="checkbox" id="showModeFields">
+      <span>Mód-specifikus mezők</span>
+      <span class="pill">csak FIRE módban</span>
+    </label>
+    <div class="input-grid mode-fields hidden" id="modeFields">
+      <div class="field pct-field">
+        <label for="swrEarlyNum">Kivételi ráta korai nyugdíjhoz <span style="color:var(--text-muted); font-weight:400;">(SWR)</span></label>
+        <div class="pct-row">
+          <input type="range" id="swrEarly" min="2" max="7" step="0.05" value="3.25">
+          <input type="number" id="swrEarlyNum" min="2" max="7" step="0.05" value="3.25">
+          <span class="pct-unit">%</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="maxAge">Maximális horizont</label>
+        <div class="suffix-row">
+          <input type="number" id="maxAge" min="20" max="100" step="1" value="70">
+          <span class="unit">év</span>
+        </div>
+      </div>
+      <div class="field">
+        <label for="contributionMode">Befizetés indexálása <span style="color:var(--text-muted); font-weight:400;">(opcionális)</span></label>
+        <div class="suffix-row">
+          <select id="contributionMode" style="width:100%;font-size:15px;font-weight:600;color:var(--text-primary);background:transparent;border:none;border-bottom:2px solid var(--baseline);padding:6px 2px 8px;font-family:inherit;outline:none;">
+            <option value="nominal">fix nominális</option>
+            <option value="inflation">inflációkövető</option>
+          </select>
+        </div>
+      </div>
+    </div>
   </section>
 
   <section class="results-grid">
     <div class="card stat accent" id="statCoastTime">
-      <div class="label">Coast FIRE eléréséig</div>
+      <div class="label" id="labelCoastTime">Coast FIRE eléréséig</div>
       <div class="value" id="valCoastTime">—</div>
       <div class="sub" id="subCoastTime">&nbsp;</div>
     </div>
     <div class="card stat" id="statCoastAmount">
-      <div class="label">Coast FIRE összeg</div>
+      <div class="label" id="labelCoastAmount">Coast FIRE összeg</div>
       <div class="value" id="valCoastAmount">—</div>
       <div class="sub" id="subCoastAmount">a keresztezési pontban szükséges tőke</div>
     </div>
     <div class="card stat" id="statTarget">
-      <div class="label">Szükséges tőke nyugdíjkor</div>
+      <div class="label" id="labelTarget">Szükséges tőke nyugdíjkor</div>
       <div class="value" id="valTarget">—</div>
       <div class="sub" id="subTarget">&nbsp;</div>
     </div>
     <div class="card stat" id="statFinal">
-      <div class="label">Portfólió értéke nyugdíjkor</div>
+      <div class="label" id="labelFinal">Portfólió értéke nyugdíjkor</div>
       <div class="value" id="valFinal">—</div>
       <div class="sub" id="subFinal">folyamatos befizetés esetén<br>havi — jelenértéken</div>
     </div>
@@ -444,7 +533,9 @@
       <div class="legend">
         <span class="key"><span class="swatch" style="background:var(--series-1)"></span>Tervezett portfólió (folyamatos befizetéssel)</span>
         <span class="key"><span class="swatch" style="background:var(--series-2)"></span>Coast FIRE célgörbe</span>
-        <span class="key"><span class="swatch dot" style="background:var(--series-3)"></span>Coast FIRE pont</span>
+        <span class="key"><span class="swatch dashed" style="color:var(--series-3)"></span>FIRE célgörbe (azonnali kivét)</span>
+        <span class="key"><span class="swatch dot" style="background:var(--series-2)"></span>Coast pont</span>
+        <span class="key"><span class="swatch dot" style="background:var(--series-3)"></span>FIRE pont</span>
       </div>
     </div>
     <div class="chart-wrap">
@@ -454,7 +545,7 @@
   </section>
 
   <section class="card explainer">
-    <strong>Mi az a Coast FIRE?</strong> Az a pillanat, amikor a már felhalmozott megtakarításod - további befizetés nélkül, csak a hozam kamatos kamatával - magától eléri a nyugdíjkori célösszeget. A <em>Coast FIRE célgörbe</em> minden hónapra megmutatja, mekkora tőke kellene ahhoz, hogy onnantól befizetés nélkül is beérje a célt. Amint a portfóliód átlépi ezt a görbét, elméletileg megállhatsz a befizetésekkel.
+    <strong>Coast FI vs. korai FIRE:</strong> ugyanabból a modellből két célgörbe számolható: a <em>Coast FI célgörbe</em> (nyugdíjkorra visszadiszkontált cél) és a <em>FIRE célgörbe</em> (azonnali kivétet fedező szükséges tőke). A metszéspontok megmutatják, mikor állhatsz le a befizetéssel, illetve mikor érheted el a teljes pénzügyi függetlenséget.
   </section>
 
   <footer class="disclaimer">
@@ -496,6 +587,9 @@
 
   // ---------- Elements ----------
   const els = {
+    modeSwitch: document.getElementById('modeSwitch'),
+    showModeFields: document.getElementById('showModeFields'),
+    modeFields: document.getElementById('modeFields'),
     currentAge: document.getElementById('currentAge'),
     retireAge: document.getElementById('retireAge'),
     monthlyContribution: document.getElementById('monthlyContribution'),
@@ -507,7 +601,13 @@
     annualInflationNum: document.getElementById('annualInflationNum'),
     swr: document.getElementById('swr'),
     swrNum: document.getElementById('swrNum'),
+    swrEarly: document.getElementById('swrEarly'),
+    swrEarlyNum: document.getElementById('swrEarlyNum'),
+    maxAge: document.getElementById('maxAge'),
+    contributionMode: document.getElementById('contributionMode'),
   };
+
+  let activeMode = 'coast';
 
   const moneyInputs = [els.monthlyContribution, els.currentInvestment, els.targetWithdrawal];
   moneyInputs.forEach(el => {
@@ -529,8 +629,27 @@
   syncPair(els.annualReturn, els.annualReturnNum);
   syncPair(els.annualInflation, els.annualInflationNum);
   syncPair(els.swr, els.swrNum);
+  syncPair(els.swrEarly, els.swrEarlyNum);
 
-  [els.currentAge, els.retireAge].forEach(el => el.addEventListener('input', recalc));
+  [els.currentAge, els.retireAge, els.maxAge].forEach(el => el.addEventListener('input', recalc));
+  els.contributionMode.addEventListener('change', recalc);
+  els.showModeFields.addEventListener('change', () => { updateModeUI(); recalc(); });
+
+  els.modeSwitch.querySelectorAll('[data-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      activeMode = btn.dataset.mode;
+      updateModeUI();
+      recalc();
+    });
+  });
+
+  function updateModeUI() {
+    els.modeSwitch.querySelectorAll('[data-mode]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.mode === activeMode);
+    });
+    const forceOpen = activeMode !== 'coast';
+    els.modeFields.classList.toggle('hidden', !(forceOpen || els.showModeFields.checked));
+  }
 
   // ---------- Theme toggle ----------
   const themeToggle = document.getElementById('themeToggle');
@@ -554,44 +673,110 @@
     return Number.isInteger(rounded) ? String(rounded) : rounded.toFixed(1);
   }
 
-  // ---------- Coast FIRE simulation ----------
+  // ---------- Coast + FIRE simulation ----------
   function simulate(input) {
-    const totalMonths = Math.round((input.retireAge - input.currentAge) * 12);
-    if (totalMonths <= 0) return null;
+    const retireMonths = Math.round((input.retireAge - input.currentAge) * 12);
+    const horizonMonths = Math.round((Math.max(input.retireAge, input.maxAge) - input.currentAge) * 12);
+    if (retireMonths <= 0 || horizonMonths <= 0) return null;
 
     const rMonthly = Math.pow(1 + input.annualReturn, 1 / 12) - 1;
     const infMonthly = Math.pow(1 + input.annualInflation, 1 / 12) - 1;
-
-    const futureMonthlyWithdrawal = input.targetWithdrawal * Math.pow(1 + infMonthly, totalMonths);
-    const futureAnnualWithdrawal = futureMonthlyWithdrawal * 12;
-    const fvTarget = futureAnnualWithdrawal / input.swr;
+    const needAt = (m, swr) => input.targetWithdrawal * Math.pow(1 + infMonthly, m) * 12 / swr;
+    const fvTarget = needAt(retireMonths, input.swr);
+    const futureMonthlyWithdrawalAtRetire = input.targetWithdrawal * Math.pow(1 + infMonthly, retireMonths);
 
     let portfolio = input.currentInvestment;
+    let contributionsPaid = 0;
     const portfolioSeries = [];
-    const targetSeries = [];
+    const coastSeries = [];
+    const fireSeries = [];
     let coastMonth = null;
     let coastValue = null;
+    let fireMonth = null;
+    let fireValue = null;
+    let fireNeedAtFire = null;
+    let contributionsToFire = null;
+    let portfolioAtRetire = null;
 
-    for (let m = 0; m <= totalMonths; m++) {
-      const monthsRemaining = totalMonths - m;
-      const requiredNow = fvTarget / Math.pow(1 + rMonthly, monthsRemaining);
+    for (let m = 0; m <= horizonMonths; m++) {
+      const monthsRemaining = Math.max(0, retireMonths - m);
+      const coastNeed = fvTarget / Math.pow(1 + rMonthly, monthsRemaining);
+      const fireNeed = needAt(m, input.swrEarly);
       portfolioSeries.push({ x: m / 12, y: portfolio });
-      targetSeries.push({ x: m / 12, y: requiredNow });
-      if (coastMonth === null && portfolio >= requiredNow) {
+      coastSeries.push({ x: m / 12, y: coastNeed });
+      fireSeries.push({ x: m / 12, y: fireNeed });
+
+      if (coastMonth === null && m <= retireMonths && portfolio >= coastNeed) {
         coastMonth = m;
         coastValue = portfolio;
       }
-      if (m < totalMonths) {
-        portfolio = portfolio * (1 + rMonthly) + input.monthlyContribution;
+      if (fireMonth === null && portfolio >= fireNeed) {
+        fireMonth = m;
+        fireValue = portfolio;
+        fireNeedAtFire = fireNeed;
+        contributionsToFire = contributionsPaid;
+      }
+      if (m === retireMonths) portfolioAtRetire = portfolio;
+
+      if (m < horizonMonths) {
+        const contributionNow = input.monthlyContribution *
+          (input.indexContributions ? Math.pow(1 + infMonthly, m) : 1);
+        portfolio = portfolio * (1 + rMonthly) + contributionNow;
+        contributionsPaid += contributionNow;
+      }
+    }
+
+    const portfolioAtHorizon = portfolio;
+    const fireNeedAtHorizon = needAt(horizonMonths, input.swrEarly);
+    const fireGapAtHorizon = Math.max(0, fireNeedAtHorizon - portfolioAtHorizon);
+
+    let missingFactor = 0;
+    for (let k = 0; k < horizonMonths; k++) {
+      const indexed = input.indexContributions ? Math.pow(1 + infMonthly, k) : 1;
+      missingFactor += indexed * Math.pow(1 + rMonthly, horizonMonths - 1 - k);
+    }
+    const missingMonthlyContribution = missingFactor > 0 ? fireGapAtHorizon / missingFactor : 0;
+
+    let projectedFireMonth = fireMonth;
+    if (projectedFireMonth === null) {
+      let projectionPortfolio = portfolioAtHorizon;
+      for (let m = horizonMonths + 1; m <= horizonMonths + 1200; m++) {
+        const contributionPrev = input.monthlyContribution *
+          (input.indexContributions ? Math.pow(1 + infMonthly, m - 1) : 1);
+        projectionPortfolio = projectionPortfolio * (1 + rMonthly) + contributionPrev;
+        if (projectionPortfolio >= needAt(m, input.swrEarly)) {
+          projectedFireMonth = m;
+          break;
+        }
       }
     }
 
     const coastPoint = coastMonth !== null ? [{ x: coastMonth / 12, y: coastValue }] : [];
+    const firePoint = fireMonth !== null ? [{ x: fireMonth / 12, y: fireValue }] : [];
 
     return {
-      totalMonths, fvTarget, coastMonth, coastValue,
-      finalPortfolio: portfolio, portfolioSeries, targetSeries, coastPoint,
-      futureMonthlyWithdrawal,
+      retireMonths,
+      horizonMonths,
+      fvTarget,
+      futureMonthlyWithdrawalAtRetire,
+      coastMonth,
+      coastValue,
+      fireMonth,
+      fireValue,
+      fireNeedAtFire,
+      projectedFireMonth,
+      contributionsToFire,
+      portfolioAtRetire,
+      portfolioAtHorizon,
+      fireNeedAtHorizon,
+      fireGapAtHorizon,
+      missingMonthlyContribution,
+      finalPortfolio: portfolioAtHorizon,
+      portfolioSeries,
+      coastSeries,
+      fireSeries,
+      coastPoint,
+      firePoint,
     };
   }
 
@@ -653,7 +838,38 @@
           order: 1,
         },
         {
-          label: 'Coast FIRE pont elérve',
+          label: 'FIRE célgörbe',
+          data: [],
+          borderColor: cssVar('--series-3'),
+          borderWidth: 2,
+          borderDash: [8, 6],
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: cssVar('--series-3'),
+          pointHoverBorderColor: cssVar('--surface-1'),
+          pointHoverBorderWidth: 2,
+          fill: false,
+          tension: 0.15,
+          order: 1,
+        },
+        {
+          label: 'Coast FIRE pont',
+          data: [],
+          showLine: false,
+          borderColor: cssVar('--series-2'),
+          backgroundColor: cssVar('--series-2'),
+          pointStyle: 'rectRounded',
+          pointRadius: 7,
+          pointHoverRadius: 8,
+          pointBorderColor: cssVar('--surface-1'),
+          pointBorderWidth: 2,
+          pointHoverBackgroundColor: cssVar('--series-2'),
+          pointHoverBorderColor: cssVar('--surface-1'),
+          pointHoverBorderWidth: 2,
+          order: 0,
+        },
+        {
+          label: 'FIRE pont',
           data: [],
           showLine: false,
           borderColor: cssVar('--series-3'),
@@ -737,10 +953,18 @@
     chart.data.datasets[1].pointHoverBackgroundColor = cssVar('--series-2');
     chart.data.datasets[1].pointHoverBorderColor = cssVar('--surface-1');
     chart.data.datasets[2].borderColor = cssVar('--series-3');
-    chart.data.datasets[2].backgroundColor = cssVar('--series-3');
-    chart.data.datasets[2].pointBorderColor = cssVar('--surface-1');
     chart.data.datasets[2].pointHoverBackgroundColor = cssVar('--series-3');
     chart.data.datasets[2].pointHoverBorderColor = cssVar('--surface-1');
+    chart.data.datasets[3].borderColor = cssVar('--series-2');
+    chart.data.datasets[3].backgroundColor = cssVar('--series-2');
+    chart.data.datasets[3].pointBorderColor = cssVar('--surface-1');
+    chart.data.datasets[3].pointHoverBackgroundColor = cssVar('--series-2');
+    chart.data.datasets[3].pointHoverBorderColor = cssVar('--surface-1');
+    chart.data.datasets[4].borderColor = cssVar('--series-3');
+    chart.data.datasets[4].backgroundColor = cssVar('--series-3');
+    chart.data.datasets[4].pointBorderColor = cssVar('--surface-1');
+    chart.data.datasets[4].pointHoverBackgroundColor = cssVar('--series-3');
+    chart.data.datasets[4].pointHoverBorderColor = cssVar('--surface-1');
     chart.options.scales.x.ticks.color = cssVar('--text-muted');
     chart.options.scales.x.title.color = cssVar('--text-muted');
     chart.options.scales.x.grid.color = cssVar('--grid');
@@ -756,17 +980,48 @@
 
   // ---------- Recalculation ----------
   const errorBanner = document.getElementById('errorBanner');
+  const refs = {
+    labelCoastTime: document.getElementById('labelCoastTime'),
+    labelCoastAmount: document.getElementById('labelCoastAmount'),
+    labelTarget: document.getElementById('labelTarget'),
+    labelFinal: document.getElementById('labelFinal'),
+    valCoastTime: document.getElementById('valCoastTime'),
+    subCoastTime: document.getElementById('subCoastTime'),
+    statCoastTime: document.getElementById('statCoastTime'),
+    statCoastAmount: document.getElementById('statCoastAmount'),
+    valCoastAmount: document.getElementById('valCoastAmount'),
+    subCoastAmount: document.getElementById('subCoastAmount'),
+    valTarget: document.getElementById('valTarget'),
+    subTarget: document.getElementById('subTarget'),
+    statTarget: document.getElementById('statTarget'),
+    valFinal: document.getElementById('valFinal'),
+    subFinal: document.getElementById('subFinal'),
+    statFinal: document.getElementById('statFinal'),
+    chartNote: document.getElementById('chartNote'),
+  };
+
+  function setStatClass(statEl, mode) {
+    statEl.classList.remove('accent', 'ok', 'warn');
+    if (mode) statEl.classList.add(mode);
+  }
+
+  function formatYearValue(years) {
+    return (Math.round(years * 10) / 10).toFixed(1).replace('.', ',') + ' év';
+  }
 
   function recalc() {
     const input = {
       currentAge: parseFloat(els.currentAge.value),
       retireAge: parseFloat(els.retireAge.value),
+      maxAge: parseFloat(els.maxAge.value),
       monthlyContribution: parseMoney(els.monthlyContribution),
       currentInvestment: parseMoney(els.currentInvestment),
       targetWithdrawal: parseMoney(els.targetWithdrawal),
       annualReturn: parseFloat(els.annualReturnNum.value) / 100,
       annualInflation: parseFloat(els.annualInflationNum.value) / 100,
       swr: parseFloat(els.swrNum.value) / 100,
+      swrEarly: parseFloat(els.swrEarlyNum.value) / 100,
+      indexContributions: els.contributionMode.value === 'inflation',
     };
 
     if (Object.values(input).some(v => isNaN(v))) return;
@@ -781,6 +1036,16 @@
       errorBanner.classList.add('show');
       return;
     }
+    if (input.swrEarly <= 0) {
+      errorBanner.textContent = 'A korai FIRE SWR-nek pozitívnak kell lennie.';
+      errorBanner.classList.add('show');
+      return;
+    }
+    if (input.maxAge <= input.currentAge) {
+      errorBanner.textContent = 'A maximális horizont életkornak nagyobbnak kell lennie a jelenlegi életkornál.';
+      errorBanner.classList.add('show');
+      return;
+    }
     errorBanner.classList.remove('show');
 
     const result = simulate(input);
@@ -788,65 +1053,153 @@
 
     // ---- Chart ----
     chart.data.datasets[0].data = result.portfolioSeries;
-    chart.data.datasets[1].data = result.targetSeries;
-    chart.data.datasets[2].data = result.coastPoint;
-    chart.$coastMarker = { x: result.coastMonth !== null ? result.coastMonth / 12 : null };
+    chart.data.datasets[1].data = result.coastSeries;
+    chart.data.datasets[2].data = result.fireSeries;
+    chart.data.datasets[3].data = result.coastPoint;
+    chart.data.datasets[4].data = result.firePoint;
+    chart.data.datasets[1].hidden = activeMode === 'fire';
+    chart.data.datasets[2].hidden = activeMode === 'coast';
+    chart.data.datasets[3].hidden = activeMode === 'fire';
+    chart.data.datasets[4].hidden = activeMode === 'coast';
+    const markerMonth = activeMode === 'fire'
+      ? result.fireMonth
+      : activeMode === 'compare'
+        ? (result.fireMonth !== null ? result.fireMonth : result.coastMonth)
+        : result.coastMonth;
+    chart.$coastMarker = { x: markerMonth !== null ? markerMonth / 12 : null };
     chart.update('none');
 
-    // ---- Stats ----
-    const valCoastTime = document.getElementById('valCoastTime');
-    const subCoastTime = document.getElementById('subCoastTime');
-    const statCoastTime = document.getElementById('statCoastTime');
-    const statCoastAmount = document.getElementById('statCoastAmount');
-    const valCoastAmount = document.getElementById('valCoastAmount');
-    const subCoastAmount = document.getElementById('subCoastAmount');
-    const chartNote = document.getElementById('chartNote');
-
-    if (result.coastMonth === null) {
-      valCoastTime.textContent = 'Nem éred el nyugdíjig';
-      statCoastTime.classList.remove('accent'); statCoastTime.classList.add('warn');
-      const gap = result.fvTarget - result.finalPortfolio;
-      subCoastTime.innerHTML = 'A jelenlegi paraméterekkel ' + huf.format(Math.round(gap)) + ' hiányzik nyugdíjkorra. Növeld a havi befizetést, vagy csökkentsd a célt.';
-      valCoastAmount.textContent = '—';
-      subCoastAmount.textContent = 'a keresztezési pontban szükséges tőke';
-      statCoastAmount.classList.remove('ok');
-      chartNote.textContent = 'A portfólió a Coast FIRE célgörbe alatt marad a teljes időszakban - a két görbe nem metszi egymást.';
-    } else {
-      statCoastTime.classList.remove('warn'); statCoastTime.classList.add('accent');
-      const today = new Date();
-      const coastDate = addMonths(today, result.coastMonth);
-      const dateStr = coastDate.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' });
-      if (result.coastMonth === 0) {
-        valCoastTime.textContent = 'Már elérted! 🎉';
-        subCoastTime.innerHTML = 'A jelenlegi tőkéd önmagában, további befizetés nélkül is eléri a nyugdíjkori célt.';
-      } else {
-        const ageAtCoast = Math.round((input.currentAge + result.coastMonth / 12) * 10) / 10;
-        valCoastTime.textContent = formatDuration(result.coastMonth);
-        subCoastTime.innerHTML = 'Várható időpont: <strong>' + dateStr + '</strong> (kb. ' + ageAtCoast + ' éves korodban)';
-      }
-      valCoastAmount.textContent = huf.format(Math.round(result.coastValue));
-      subCoastAmount.textContent = 'ekkora tőkénél állhatsz meg a befizetéssel';
-      statCoastAmount.classList.add('ok');
-      chartNote.textContent = 'A zöld jelölő és a szaggatott függőleges vonal mutatja, mikor keresztezi a portfóliód a Coast FIRE célgörbét. Ettől a ponttól kezdve a felhalmozott tőke önmagában - további befizetések nélkül - is eléri a nyugdíjkori célt.';
-    }
-
-    document.getElementById('valTarget').textContent = huf.format(Math.round(result.fvTarget));
-    document.getElementById('subTarget').innerHTML = 'havi ' + huf.format(Math.round(result.futureMonthlyWithdrawal)) + ' kivétet fedez ' + input.retireAge + ' éves kortól';
-
-    const valFinal = document.getElementById('valFinal');
-    const subFinal = document.getElementById('subFinal');
-    const statFinal = document.getElementById('statFinal');
+    const today = new Date();
     const infMonthly = Math.pow(1 + input.annualInflation, 1 / 12) - 1;
-    const presentValueMonthlyWithdrawal = (result.finalPortfolio * input.swr / 12) / Math.pow(1 + infMonthly, result.totalMonths);
-    valFinal.textContent = huf.format(Math.round(result.finalPortfolio));
-    subFinal.innerHTML = 'folyamatos befizetés esetén<br>havi ' + huf.format(Math.round(presentValueMonthlyWithdrawal)) + ' jelenértéken';
-    if (result.finalPortfolio >= result.fvTarget) {
-      statFinal.classList.remove('warn'); statFinal.classList.add('ok');
-    } else {
-      statFinal.classList.remove('ok'); statFinal.classList.add('warn');
+
+    if (activeMode === 'coast') {
+      refs.labelCoastTime.textContent = 'Coast FIRE eléréséig';
+      refs.labelCoastAmount.textContent = 'Coast FIRE összeg';
+      refs.labelTarget.textContent = 'Szükséges tőke nyugdíjkor';
+      refs.labelFinal.textContent = 'Portfólió értéke nyugdíjkor';
+
+      if (result.coastMonth === null) {
+        refs.valCoastTime.textContent = 'Nem éred el nyugdíjig';
+        setStatClass(refs.statCoastTime, 'warn');
+        const gap = result.fvTarget - result.portfolioAtRetire;
+        refs.subCoastTime.innerHTML = huf.format(Math.round(gap)) + ' hiányzik nyugdíjkorra.';
+        refs.valCoastAmount.textContent = '—';
+        refs.subCoastAmount.textContent = 'a keresztezési pontban szükséges tőke';
+        setStatClass(refs.statCoastAmount, null);
+      } else {
+        setStatClass(refs.statCoastTime, 'accent');
+        const coastDate = addMonths(today, result.coastMonth);
+        const dateStr = coastDate.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' });
+        if (result.coastMonth === 0) {
+          refs.valCoastTime.textContent = 'Már elérted! 🎉';
+          refs.subCoastTime.innerHTML = 'A jelenlegi tőkéd önmagában is elég.';
+        } else {
+          const ageAtCoast = Math.round((input.currentAge + result.coastMonth / 12) * 10) / 10;
+          refs.valCoastTime.textContent = formatDuration(result.coastMonth);
+          refs.subCoastTime.innerHTML = dateStr + ' · kb. ' + ageAtCoast + ' évesen';
+        }
+        refs.valCoastAmount.textContent = huf.format(Math.round(result.coastValue));
+        refs.subCoastAmount.textContent = 'ekkora tőkénél állhatsz meg a befizetéssel';
+        setStatClass(refs.statCoastAmount, 'ok');
+      }
+
+      refs.valTarget.textContent = huf.format(Math.round(result.fvTarget));
+      refs.subTarget.innerHTML = 'havi ' + huf.format(Math.round(result.futureMonthlyWithdrawalAtRetire)) + ' kivétet fedez ' + input.retireAge + ' éves kortól';
+
+      const presentValueMonthlyWithdrawal = (result.portfolioAtRetire * input.swr / 12) / Math.pow(1 + infMonthly, result.retireMonths);
+      refs.valFinal.textContent = huf.format(Math.round(result.portfolioAtRetire));
+      refs.subFinal.innerHTML = 'folyamatos befizetés esetén<br>havi ' + huf.format(Math.round(presentValueMonthlyWithdrawal)) + ' jelenértéken';
+      setStatClass(refs.statFinal, result.portfolioAtRetire >= result.fvTarget ? 'ok' : 'warn');
+      refs.chartNote.textContent = 'A Coast görbe a nyugdíjkori cél visszadiszkontált értéke; a metszés után elméletileg leállhatsz a befizetéssel.';
+      return;
     }
+
+    if (activeMode === 'fire') {
+      refs.labelCoastTime.textContent = 'FIRE eléréséig';
+      refs.labelCoastAmount.textContent = 'Szükséges tőke';
+      refs.labelTarget.textContent = 'Nyereség';
+      refs.labelFinal.textContent = 'Összes befizetés';
+
+      if (result.fireMonth === null) {
+        refs.valCoastTime.textContent = 'Nincs metszés horizontig';
+        setStatClass(refs.statCoastTime, 'warn');
+        if (result.projectedFireMonth !== null) {
+          refs.subCoastTime.textContent = 'Kb. +' + formatDuration(result.projectedFireMonth - result.horizonMonths) + ' a max. horizont után.';
+        } else {
+          refs.subCoastTime.textContent = 'A jelenlegi paraméterek mellett még jóval utána sem látszik metszés.';
+        }
+        refs.valCoastAmount.textContent = huf.format(Math.round(result.fireNeedAtHorizon));
+        refs.subCoastAmount.textContent = 'szükséges tőke a max. horizonton';
+        setStatClass(refs.statCoastAmount, null);
+        refs.valTarget.textContent = huf.format(Math.round(result.fireGapAtHorizon));
+        refs.subTarget.textContent = 'hiányzó tőke a horizont végén';
+        setStatClass(refs.statTarget, 'warn');
+        refs.valFinal.textContent = huf.format(Math.round(result.missingMonthlyContribution));
+        refs.subFinal.innerHTML = 'plusz havi befizetés a célhoz<br>' + formatAgeLabel(input.maxAge) + ' éves korig';
+        setStatClass(refs.statFinal, 'warn');
+      } else {
+        setStatClass(refs.statCoastTime, 'accent');
+        refs.valCoastTime.textContent = formatDuration(result.fireMonth);
+        const fireDate = addMonths(today, result.fireMonth);
+        const fireDateStr = fireDate.toLocaleDateString('hu-HU', { year: 'numeric', month: 'long' });
+        const ageAtFire = Math.round((input.currentAge + result.fireMonth / 12) * 10) / 10;
+        refs.subCoastTime.innerHTML = ageAtFire + ' évesen · ' + fireDateStr;
+
+        refs.valCoastAmount.textContent = huf.format(Math.round(result.fireNeedAtFire));
+        refs.subCoastAmount.textContent = 'akkori nominális értéken';
+        setStatClass(refs.statCoastAmount, null);
+
+        const gainYears = input.retireAge - (input.currentAge + result.fireMonth / 12);
+        refs.valTarget.textContent = (gainYears >= 0 ? '' : '-') + formatYearValue(Math.abs(gainYears));
+        refs.subTarget.textContent = input.retireAge + ' éves korhatárhoz képest';
+        setStatClass(refs.statTarget, gainYears >= 0 ? 'ok' : 'warn');
+
+        refs.valFinal.textContent = huf.format(Math.round(result.contributionsToFire || 0));
+        refs.subFinal.textContent = 'a FIRE-pontig';
+        setStatClass(refs.statFinal, null);
+      }
+
+      refs.chartNote.textContent = 'A FIRE görbe az azonnali kivétet fedező szükséges tőkét mutatja; a metszéspontnál elérhető a teljes pénzügyi függetlenség.';
+      return;
+    }
+
+    refs.labelCoastTime.textContent = 'Coast FI pont';
+    refs.labelCoastAmount.textContent = 'FIRE pont';
+    refs.labelTarget.textContent = 'Eltérés';
+    refs.labelFinal.textContent = 'Összevetés';
+
+    refs.valCoastTime.textContent = result.coastMonth === null ? '—' : formatDuration(result.coastMonth);
+    refs.subCoastTime.textContent = result.coastMonth === null ? 'nincs metszés nyugdíjig' : ('kb. ' + formatAgeLabel(input.currentAge + result.coastMonth / 12) + ' évesen');
+    setStatClass(refs.statCoastTime, result.coastMonth === null ? 'warn' : 'accent');
+
+    refs.valCoastAmount.textContent = result.fireMonth === null ? '—' : formatDuration(result.fireMonth);
+    refs.subCoastAmount.textContent = result.fireMonth === null ? 'nincs metszés horizontig' : ('kb. ' + formatAgeLabel(input.currentAge + result.fireMonth / 12) + ' évesen');
+    setStatClass(refs.statCoastAmount, result.fireMonth === null ? 'warn' : 'ok');
+
+    if (result.coastMonth !== null && result.fireMonth !== null) {
+      const delta = result.fireMonth - result.coastMonth;
+      refs.valTarget.textContent = formatDuration(Math.abs(delta));
+      refs.subTarget.textContent = delta >= 0 ? 'ennyivel később jön a FIRE pont' : 'ennyivel előbb jön a FIRE pont';
+    } else {
+      refs.valTarget.textContent = '—';
+      refs.subTarget.textContent = 'mindkét metszés kell az összevetéshez';
+    }
+    setStatClass(refs.statTarget, null);
+
+    if (result.fireMonth !== null) {
+      const gainYears = input.retireAge - (input.currentAge + result.fireMonth / 12);
+      refs.valFinal.textContent = (gainYears >= 0 ? '+' : '-') + formatYearValue(Math.abs(gainYears));
+      refs.subFinal.textContent = 'korábbi/későbbi pénzügyi függetlenség';
+      setStatClass(refs.statFinal, gainYears >= 0 ? 'ok' : 'warn');
+    } else {
+      refs.valFinal.textContent = huf.format(Math.round(result.missingMonthlyContribution));
+      refs.subFinal.textContent = 'plusz havi befizetés kell a FIRE célhoz';
+      setStatClass(refs.statFinal, 'warn');
+    }
+    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast és FIRE célgörbéket, illetve a két metszéspontot.';
   }
 
+  updateModeUI();
   recalc();
 })();
 </script>
