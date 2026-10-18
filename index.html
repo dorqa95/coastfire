@@ -17,7 +17,8 @@
     --baseline:       #c3c2b7;
     --series-1:       #2a78d6; /* portfólió befizetésekkel */
     --series-2:       #eb6834; /* coast célgörbe */
-    --series-3:       #1baf7a; /* Coast FIRE pont marker */
+    --series-3:       #1baf7a; /* FIRE célszám, FIRE pont */
+    --series-4:       #8a5cd6; /* portfólió FIRE pontig befizetéssel */
     --good:           #006300;
     --good-bg:        #0ca30c;
     --critical:       #d03b3b;
@@ -37,6 +38,7 @@
       --series-1:       #3987e5;
       --series-2:       #d95926;
       --series-3:       #199e70;
+      --series-4:       #9c74e8;
       --good:           #0ca30c;
       --good-bg:        #0ca30c;
       --critical:       #e66767;
@@ -56,6 +58,7 @@
     --series-1:       #3987e5;
     --series-2:       #d95926;
     --series-3:       #199e70;
+    --series-4:       #9c74e8;
     --good:           #0ca30c;
     --good-bg:        #0ca30c;
     --critical:       #e66767;
@@ -397,6 +400,22 @@
     font-weight: 650;
     margin: 0;
   }
+  .chart-title {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .mode-switch.compact {
+    margin: 0;
+    padding: 3px;
+    border-radius: 10px;
+  }
+  .mode-switch.compact .mode-btn {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: 7px;
+  }
   .legend {
     display: flex;
     gap: 16px;
@@ -408,6 +427,9 @@
     display: inline-flex;
     align-items: center;
     gap: 6px;
+  }
+  .legend .key[hidden] {
+    display: none;
   }
   .legend .swatch {
     width: 14px; height: 3px; border-radius: 2px;
@@ -462,7 +484,7 @@
   <header class="top">
     <div>
       <h1>Coast FI(RE) kalkulátor</h1>
-      <p>Ugyanazzal a bemenettel nézd meg a Coast FI pontot, a korai FIRE dátumot és a két stratégia közti különbséget egy közös szimulációban.</p>
+      <p>Ugyanazzal a bemenettel nézd meg a Coast FI pontot, a FIRE dátumot és a két stratégia közti különbséget egy közös szimulációban.</p>
     </div>
     <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
   </header>
@@ -471,7 +493,7 @@
     <h2>Bemeneti adatok</h2>
     <div class="mode-switch" id="modeSwitch">
       <button class="mode-btn active" data-mode="coast" type="button">Coast FI</button>
-      <button class="mode-btn" data-mode="fire" type="button">Korai FIRE</button>
+      <button class="mode-btn" data-mode="fire" type="button">FIRE</button>
       <button class="mode-btn" data-mode="compare" type="button">Összehasonlítás</button>
     </div>
     <div class="error-banner" id="errorBanner"></div>
@@ -536,7 +558,7 @@
       </div>
 
       <div class="field pct-field">
-        <label for="swrNum">Kivételi ráta / év <span style="color:var(--text-muted); font-weight:400;">(SWR)</span><span class="help-tip" tabindex="0" role="note" aria-label="Korai FIRE esetén általában nem javallott 4% feletti érték." data-tip="Korai FIRE esetén általában nem javallott 4% feletti érték.">i</span></label>
+        <label for="swrNum">Kivételi ráta / év <span style="color:var(--text-muted); font-weight:400;">(SWR)</span><span class="help-tip" tabindex="0" role="note" aria-label="FIRE esetén általában nem javallott 4% feletti érték." data-tip="FIRE esetén általában nem javallott 4% feletti érték.">i</span></label>
         <div class="pct-row">
           <input type="range" id="swr" min="2" max="7" step="0.1" value="3.5">
           <input type="number" id="swrNum" min="2" max="7" step="0.1" value="3.5">
@@ -587,13 +609,20 @@
 
   <section class="card chart-card">
     <div class="chart-head">
-      <h2>Befektetés alakulása</h2>
+      <div class="chart-title">
+        <h2>Befektetés alakulása</h2>
+        <div class="mode-switch compact" id="valueSwitch">
+          <button class="mode-btn active" data-value-mode="nominal" type="button">Nominálisan</button>
+          <button class="mode-btn" data-value-mode="real" type="button">Mai értéken</button>
+        </div>
+      </div>
       <div class="legend">
-        <span class="key"><span class="swatch" style="background:var(--series-1)"></span>Tervezett portfólió (folyamatos befizetéssel)</span>
-        <span class="key"><span class="swatch" style="background:var(--series-2)"></span>Coast FIRE célgörbe</span>
-        <span class="key"><span class="swatch dashed" style="color:var(--series-3)"></span>FIRE célgörbe (azonnali kivét)</span>
-        <span class="key"><span class="swatch dot" style="background:var(--series-2)"></span>Coast pont</span>
-        <span class="key"><span class="swatch dot" style="background:var(--series-3)"></span>FIRE pont</span>
+        <span class="key" data-legend-modes="coast compare"><span class="swatch" style="background:var(--series-1)"></span>Normál célgörbe</span>
+        <span class="key" data-legend-modes="fire compare"><span class="swatch" style="background:var(--series-4)"></span>FIRE célgörbe</span>
+        <span class="key" data-legend-modes="coast compare"><span class="swatch" style="background:var(--series-2)"></span>Coast FIRE célgörbe</span>
+        <span class="key" data-legend-modes="fire compare"><span class="swatch dashed" style="color:var(--series-3)"></span>FIRE célszám</span>
+        <span class="key" data-legend-modes="coast compare"><span class="swatch dot" style="background:var(--series-2)"></span>Coast pont</span>
+        <span class="key" data-legend-modes="fire compare"><span class="swatch dot" style="background:var(--series-3)"></span>FIRE pont</span>
       </div>
     </div>
     <div class="chart-wrap">
@@ -603,12 +632,12 @@
   </section>
 
   <section class="card explainer">
-    <strong>Coast FI vs. korai FIRE:</strong> ugyanabból a modellből két célgörbe számolható: a <em>Coast FI célgörbe</em> (nyugdíjkorra visszadiszkontált cél) és a <em>FIRE célgörbe</em> (azonnali kivétet fedező szükséges tőke). A metszéspontok megmutatják, mikor állhatsz le a befizetéssel, illetve mikor érheted el a teljes pénzügyi függetlenséget.
+    <strong>Coast FI vs. FIRE:</strong> ugyanabból a modellből két cél számolható: a <em>Coast FI célgörbe</em> (nyugdíjkorra visszadiszkontált cél) és a <em>FIRE célszám</em> (azonnali kivétet fedező szükséges tőke). A metszéspontok megmutatják, mikor állhatsz le a befizetéssel, illetve mikor érheted el a teljes pénzügyi függetlenséget.
   </section>
 
   <footer class="disclaimer">
     A számítás egyszerűsített, kamatos kamatos modellt használ (havi tőkésítéssel), és nem veszi figyelembe az adózást,
-    díjakat vagy a hozamok ingadozását. Kizárólag tájékoztató jellegű, nem minősül pénzügyi tanácsadásnak. Ha szeretnél
+    bróker díjakat vagy a hozamok ingadozását. Kizárólag tájékoztató jellegű, nem minősül pénzügyi tanácsadásnak. Ha szeretnél
     támogatni Revolut-on keresztül a <b class="selectable">@dorqa95</b> felhasználói fiókomon tudsz segíteni. Ha szeretnéd
     velem közösen átbeszélni a pénzügyeidet online mentorálás keretén belül, akkor <a
       href="https://tidycal.com/kekesidori/mentoralas" target="_blank">itt</a> tudsz jelentkezni.
@@ -707,9 +736,24 @@
     });
   });
 
+  let valueMode = 'nominal';
+  const valueSwitch = document.getElementById('valueSwitch');
+  valueSwitch.querySelectorAll('[data-value-mode]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      valueMode = btn.dataset.valueMode;
+      valueSwitch.querySelectorAll('[data-value-mode]').forEach(b => {
+        b.classList.toggle('active', b === btn);
+      });
+      recalc();
+    });
+  });
+
   function updateModeUI() {
     els.modeSwitch.querySelectorAll('[data-mode]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.mode === activeMode);
+    });
+    document.querySelectorAll('[data-legend-modes]').forEach(key => {
+      key.hidden = !key.dataset.legendModes.split(' ').includes(activeMode);
     });
   }
 
@@ -760,13 +804,19 @@
     let fireNeedAtFire = null;
     let contributionsToFire = null;
     let portfolioAtRetire = null;
+    let coastAfterRetire = fvTarget;
 
     for (let m = 0; m <= horizonMonths; m++) {
       const monthsRemaining = Math.max(0, retireMonths - m);
       const coastNeed = fvTarget / Math.pow(1 + rMonthly, monthsRemaining);
       const fireNeed = needAt(m, input.swr);
       accumulationSeries.push({ x: m / 12, y: portfolio });
-      coastSeries.push({ x: m / 12, y: coastNeed });
+      // Nyugdíjkortól a Coast célgörbéből is havonta levonódik a cél havi kivét.
+      if (m > retireMonths) {
+        const withdrawalNow = input.targetWithdrawal * Math.pow(1 + infMonthly, m - 1);
+        coastAfterRetire = Math.max(0, coastAfterRetire * (1 + rMonthly) - withdrawalNow);
+      }
+      coastSeries.push({ x: m / 12, y: m > retireMonths ? coastAfterRetire : coastNeed });
       fireSeries.push({ x: m / 12, y: fireNeed });
 
       if (coastMonth === null && m <= retireMonths && portfolio >= coastNeed) {
@@ -789,23 +839,21 @@
       }
     }
 
-    if (fireMonth === null) {
-      portfolioSeries.push(...accumulationSeries);
-    } else {
-      const fireBasePortfolio = accumulationSeries[fireMonth].y;
-      const baseMonthlyWithdrawal = fireBasePortfolio * input.swr / 12;
-      let postFirePortfolio = fireBasePortfolio;
-      for (let m = 0; m <= horizonMonths; m++) {
-        if (m <= fireMonth) {
-          portfolioSeries.push(accumulationSeries[m]);
-          continue;
-        }
-        const monthsSinceFire = m - fireMonth;
-        const withdrawalNow = baseMonthlyWithdrawal * Math.pow(1 + infMonthly, monthsSinceFire - 1);
-        postFirePortfolio = postFirePortfolio * (1 + rMonthly) - withdrawalNow;
-        portfolioSeries.push({ x: m / 12, y: postFirePortfolio });
+    // Befizetés a startMonth-ig, utána havonta a (mai értéken megadott, inflációval
+    // növelt) cél havi kivét levonása a tervezett élethosszig.
+    const withdrawalSeriesFrom = (startMonth) => {
+      if (startMonth === null) return accumulationSeries.slice();
+      const series = accumulationSeries.slice(0, startMonth + 1);
+      let value = accumulationSeries[startMonth].y;
+      for (let m = startMonth + 1; m <= horizonMonths; m++) {
+        const withdrawalNow = input.targetWithdrawal * Math.pow(1 + infMonthly, m - 1);
+        value = Math.max(0, value * (1 + rMonthly) - withdrawalNow);
+        series.push({ x: m / 12, y: value });
       }
-    }
+      return series;
+    };
+    portfolioSeries.push(...withdrawalSeriesFrom(fireMonth));
+    const retirePortfolioSeries = withdrawalSeriesFrom(Math.min(retireMonths, horizonMonths));
 
     const portfolioAtHorizon = portfolio;
     const fireNeedAtHorizon = needAt(horizonMonths, input.swr);
@@ -854,6 +902,7 @@
       missingMonthlyContribution,
       finalPortfolio: portfolioAtHorizon,
       portfolioSeries,
+      retirePortfolioSeries,
       coastSeries,
       fireSeries,
       coastPoint,
@@ -890,7 +939,7 @@
     data: {
       datasets: [
         {
-          label: 'Tervezett portfólió (FIRE-ig befizetés, utána kivét)',
+          label: 'Normál célgörbe',
           data: [],
           borderColor: cssVar('--series-1'),
           backgroundColor: cssVar('--series-1') + '1a',
@@ -919,7 +968,7 @@
           order: 1,
         },
         {
-          label: 'FIRE célgörbe',
+          label: 'FIRE célszám',
           data: [],
           borderColor: cssVar('--series-3'),
           borderWidth: 2,
@@ -964,6 +1013,21 @@
           pointHoverBorderColor: cssVar('--surface-1'),
           pointHoverBorderWidth: 2,
           order: 0,
+        },
+        {
+          label: 'FIRE célgörbe',
+          data: [],
+          borderColor: cssVar('--series-4'),
+          backgroundColor: cssVar('--series-4') + '1a',
+          borderWidth: 2,
+          pointRadius: 0,
+          pointHoverRadius: 5,
+          pointHoverBackgroundColor: cssVar('--series-4'),
+          pointHoverBorderColor: cssVar('--surface-1'),
+          pointHoverBorderWidth: 2,
+          fill: true,
+          tension: 0.15,
+          order: 2,
         },
       ]
     },
@@ -1046,6 +1110,10 @@
     chart.data.datasets[4].pointBorderColor = cssVar('--surface-1');
     chart.data.datasets[4].pointHoverBackgroundColor = cssVar('--series-3');
     chart.data.datasets[4].pointHoverBorderColor = cssVar('--surface-1');
+    chart.data.datasets[5].borderColor = cssVar('--series-4');
+    chart.data.datasets[5].backgroundColor = cssVar('--series-4') + '1a';
+    chart.data.datasets[5].pointHoverBackgroundColor = cssVar('--series-4');
+    chart.data.datasets[5].pointHoverBorderColor = cssVar('--surface-1');
     chart.options.scales.x.ticks.color = cssVar('--text-muted');
     chart.options.scales.x.title.color = cssVar('--text-muted');
     chart.options.scales.x.grid.color = cssVar('--grid');
@@ -1127,11 +1195,23 @@
     if (!result) return;
 
     // ---- Chart ----
-    chart.data.datasets[0].data = result.portfolioSeries;
-    chart.data.datasets[1].data = result.coastSeries;
-    chart.data.datasets[2].data = result.fireSeries;
-    chart.data.datasets[3].data = result.coastPoint;
-    chart.data.datasets[4].data = result.firePoint;
+    // Mai értéken: minden pontot visszadiszkontálunk az inflációval a mai időpontra.
+    const chartInfMonthly = Math.pow(1 + input.annualInflation, 1 / 12) - 1;
+    const toDisplay = (series) => valueMode === 'real'
+      ? series.map(p => ({ x: p.x, y: p.y / Math.pow(1 + chartInfMonthly, Math.round(p.x * 12)) }))
+      : series;
+    chart.options.scales.y.title.text = valueMode === 'real' ? 'Érték (Ft, mai értéken)' : 'Érték (Ft, nominális)';
+    chart.data.datasets[0].data = toDisplay(result.retirePortfolioSeries);
+    chart.data.datasets[5].data = toDisplay(result.portfolioSeries);
+    chart.data.datasets[0].hidden = activeMode === 'fire';
+    chart.data.datasets[5].hidden = activeMode === 'coast';
+    // Összehasonlításnál a két kitöltés egymásra lógna, ott csak vonalak.
+    chart.data.datasets[0].fill = activeMode !== 'compare';
+    chart.data.datasets[5].fill = activeMode !== 'compare';
+    chart.data.datasets[1].data = toDisplay(result.coastSeries);
+    chart.data.datasets[2].data = toDisplay(result.fireSeries);
+    chart.data.datasets[3].data = toDisplay(result.coastPoint);
+    chart.data.datasets[4].data = toDisplay(result.firePoint);
     chart.data.datasets[1].hidden = activeMode === 'fire';
     chart.data.datasets[2].hidden = activeMode === 'coast';
     chart.data.datasets[3].hidden = activeMode === 'fire';
@@ -1185,7 +1265,7 @@
       refs.valFinal.textContent = huf.format(Math.round(result.portfolioAtRetire));
       refs.subFinal.innerHTML = 'folyamatos befizetés esetén<br>havi ' + huf.format(Math.round(presentValueMonthlyWithdrawal)) + ' jelenértéken';
       setStatClass(refs.statFinal, result.portfolioAtRetire >= result.fvTarget ? 'ok' : 'warn');
-      refs.chartNote.textContent = 'A Coast görbe a nyugdíjkori cél visszadiszkontált értéke; a metszés után elméletileg leállhatsz a befizetéssel.';
+      refs.chartNote.textContent = 'A Coast görbe nyugdíjkorig a nyugdíjkori cél visszadiszkontált értéke (a metszés után elméletileg leállhatsz a befizetéssel), nyugdíjkortól pedig a cél havi kivétet levonva halad tovább. A portfólió nyugdíjkorig folyamatos befizetéssel, utána a cél havi kivét (inflációval növelt) levonásával halad a tervezett élethosszig.';
       return;
     }
 
@@ -1234,7 +1314,7 @@
         setStatClass(refs.statFinal, null);
       }
 
-      refs.chartNote.textContent = 'A tervezett portfólió görbe a FIRE pontig befizetésekkel, utána az SWR-rel számolt kivéttel és az inflációkövetéssel halad tovább.';
+      refs.chartNote.textContent = 'A portfólió a FIRE pontig befizetéssel, utána a cél havi kivét (inflációval növelt) havonkénti levonásával halad a tervezett élethosszig.';
       return;
     }
 
@@ -1271,7 +1351,7 @@
       refs.subFinal.textContent = 'plusz havi befizetés kell a FIRE célhoz';
       setStatClass(refs.statFinal, 'warn');
     }
-    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast és FIRE célgörbéket, illetve a tervezett portfólió menetét a FIRE utáni kivételéssel együtt.';
+    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast FIRE célgörbét és a FIRE célszámot, valamint a Normál célgörbét (befizetés nyugdíjkorig) és a FIRE célgörbét (befizetés a FIRE pontig), mindkettőt a cél havi kivét levonásával.';
   }
 
   updateModeUI();
