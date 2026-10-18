@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Coast FIRE kalkulátor</title>
+<title>Coast FI / FIRE kalkulátor</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.5.0/chart.umd.min.js"></script>
 <style>
   :root {
@@ -16,7 +16,7 @@
     --grid:           #e1e0d9;
     --baseline:       #c3c2b7;
     --series-1:       #2a78d6; /* portfólió befizetésekkel */
-    --series-2:       #eb6834; /* coast célgörbe */
+    --series-2:       #eb6834; /* coast görbe */
     --series-3:       #1baf7a; /* FIRE célszám, FIRE pont */
     --series-4:       #8a5cd6; /* portfólió FIRE pontig befizetéssel */
     --good:           #006300;
@@ -383,6 +383,27 @@
   .stat .sub .tag.good { color: var(--good); }
   .stat .sub .tag.bad { color: var(--critical); }
 
+  .contrib-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-top: 18px;
+  }
+  .contrib-grid[hidden] { display: none; }
+  @media (max-width: 720px) {
+    .contrib-grid { grid-template-columns: 1fr; }
+  }
+  .contrib-grid .label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .contrib-grid .swatch {
+    width: 14px; height: 3px; border-radius: 2px;
+    display: inline-block;
+    flex: none;
+  }
+
   /* ---- Chart ---- */
   .chart-card {
     padding: 22px 24px 14px;
@@ -441,6 +462,12 @@
     width: 16px;
     height: 0;
   }
+  .legend .swatch.vline {
+    background: transparent !important;
+    border-left: 1.5px dashed currentColor;
+    width: 0;
+    height: 12px;
+  }
   .legend .swatch.dot {
     width: 9px; height: 9px; border-radius: 3px;
   }
@@ -455,15 +482,6 @@
     margin: 10px 2px 14px;
     line-height: 1.5;
   }
-
-  .explainer {
-    margin-top: 18px;
-    padding: 18px 22px;
-    font-size: 13.5px;
-    color: var(--text-secondary);
-    line-height: 1.6;
-  }
-  .explainer strong { color: var(--text-primary); }
 
   footer.disclaimer {
     margin-top: 18px;
@@ -483,7 +501,7 @@
 
   <header class="top">
     <div>
-      <h1>Coast FI(RE) kalkulátor</h1>
+      <h1>Coast FI / FIRE kalkulátor</h1>
       <p>Ugyanazzal a bemenettel nézd meg a Coast FI pontot, a FIRE dátumot és a két stratégia közti különbséget egy közös szimulációban.</p>
     </div>
     <button class="theme-toggle" id="themeToggle" type="button">🌙</button>
@@ -586,12 +604,12 @@
 
   <section class="results-grid">
     <div class="card stat accent" id="statCoastTime">
-      <div class="label" id="labelCoastTime">Coast FIRE eléréséig</div>
+      <div class="label" id="labelCoastTime">Coast FI eléréséig</div>
       <div class="value" id="valCoastTime">—</div>
       <div class="sub" id="subCoastTime">&nbsp;</div>
     </div>
     <div class="card stat" id="statCoastAmount">
-      <div class="label" id="labelCoastAmount">Coast FIRE összeg</div>
+      <div class="label" id="labelCoastAmount">Coast FI összeg</div>
       <div class="value" id="valCoastAmount">—</div>
       <div class="sub" id="subCoastAmount">a keresztezési pontban szükséges tőke</div>
     </div>
@@ -617,11 +635,12 @@
         </div>
       </div>
       <div class="legend">
-        <span class="key" data-legend-modes="coast compare"><span class="swatch" style="background:var(--series-1)"></span>Normál célgörbe</span>
-        <span class="key" data-legend-modes="fire compare"><span class="swatch" style="background:var(--series-4)"></span>FIRE célgörbe</span>
-        <span class="key" data-legend-modes="coast compare"><span class="swatch" style="background:var(--series-2)"></span>Coast FIRE célgörbe</span>
+        <span class="key" data-legend-modes="coast compare"><span class="swatch" style="background:var(--series-1)"></span>Normál görbe</span>
+        <span class="key" data-legend-modes="fire compare"><span class="swatch" style="background:var(--series-4)"></span>FIRE görbe</span>
+        <span class="key" data-legend-modes="coast compare"><span class="swatch" style="background:var(--series-2)"></span>Coast FI görbe</span>
         <span class="key" data-legend-modes="fire compare"><span class="swatch dashed" style="color:var(--series-3)"></span>FIRE célszám</span>
-        <span class="key" data-legend-modes="coast compare"><span class="swatch dot" style="background:var(--series-2)"></span>Coast pont</span>
+        <span class="key" data-legend-modes="coast compare"><span class="swatch dot" style="background:var(--series-2)"></span>Coast FI pont</span>
+        <span class="key"><span class="swatch vline" style="color:var(--text-muted)"></span>Nyugdíjkorhatár</span>
         <span class="key" data-legend-modes="fire compare"><span class="swatch dot" style="background:var(--series-3)"></span>FIRE pont</span>
       </div>
     </div>
@@ -631,8 +650,22 @@
     <p class="chart-note" id="chartNote"></p>
   </section>
 
-  <section class="card explainer">
-    <strong>Coast FI vs. FIRE:</strong> ugyanabból a modellből két cél számolható: a <em>Coast FI célgörbe</em> (nyugdíjkorra visszadiszkontált cél) és a <em>FIRE célszám</em> (azonnali kivétet fedező szükséges tőke). A metszéspontok megmutatják, mikor állhatsz le a befizetéssel, illetve mikor érheted el a teljes pénzügyi függetlenséget.
+  <section class="contrib-grid" id="contribGrid" hidden>
+    <div class="card stat">
+      <div class="label"><span class="swatch" style="background:var(--series-1)"></span>Normál: összes befizetés</div>
+      <div class="value" id="valContribNormal">—</div>
+      <div class="sub" id="subContribNormal">&nbsp;</div>
+    </div>
+    <div class="card stat">
+      <div class="label"><span class="swatch" style="background:var(--series-2)"></span>Coast FI: összes befizetés</div>
+      <div class="value" id="valContribCoast">—</div>
+      <div class="sub" id="subContribCoast">&nbsp;</div>
+    </div>
+    <div class="card stat">
+      <div class="label"><span class="swatch" style="background:var(--series-4)"></span>FIRE: összes befizetés</div>
+      <div class="value" id="valContribFire">—</div>
+      <div class="sub" id="subContribFire">&nbsp;</div>
+    </div>
   </section>
 
   <footer class="disclaimer">
@@ -793,6 +826,9 @@
 
     let portfolio = input.currentInvestment;
     let contributionsPaid = 0;
+    let contributionsRealPaid = 0;
+    // contributionTotals[m]: az m. hónapig összesen befizetett összeg (nominálisan és mai értéken).
+    const contributionTotals = [{ nominal: 0, real: 0 }];
     const portfolioSeries = [];
     const accumulationSeries = [];
     const coastSeries = [];
@@ -811,7 +847,7 @@
       const coastNeed = fvTarget / Math.pow(1 + rMonthly, monthsRemaining);
       const fireNeed = needAt(m, input.swr);
       accumulationSeries.push({ x: m / 12, y: portfolio });
-      // Nyugdíjkortól a Coast célgörbéből is havonta levonódik a cél havi kivét.
+      // Nyugdíjkortól a Coast görbéből is havonta levonódik a cél havi kivét.
       if (m > retireMonths) {
         const withdrawalNow = input.targetWithdrawal * Math.pow(1 + infMonthly, m - 1);
         coastAfterRetire = Math.max(0, coastAfterRetire * (1 + rMonthly) - withdrawalNow);
@@ -836,6 +872,8 @@
           (input.indexContributions ? Math.pow(1 + infMonthly, m) : 1);
         portfolio = portfolio * (1 + rMonthly) + contributionNow;
         contributionsPaid += contributionNow;
+        contributionsRealPaid += contributionNow / Math.pow(1 + infMonthly, m + 1);
+        contributionTotals.push({ nominal: contributionsPaid, real: contributionsRealPaid });
       }
     }
 
@@ -895,6 +933,7 @@
       fireNeedAtFire,
       projectedFireMonth,
       contributionsToFire,
+      contributionTotals,
       portfolioAtRetire,
       portfolioAtHorizon,
       fireNeedAtHorizon,
@@ -913,24 +952,37 @@
   // ---------- Chart setup ----------
   const ctx = document.getElementById('chart').getContext('2d');
 
+  // Függőleges jelölők (Coast FI pont, FIRE pont, nyugdíjkorhatár) felirattal a tetején.
   const coastMarkerPlugin = {
     id: 'coastMarker',
     afterDatasetsDraw(chartInstance) {
-      const meta = chartInstance.$coastMarker;
-      if (!meta || meta.x == null) return;
+      const markers = chartInstance.$markers || [];
       const { ctx, chartArea, scales } = chartInstance;
-      const x = scales.x.getPixelForValue(meta.x);
-      if (x < chartArea.left || x > chartArea.right) return;
-      ctx.save();
-      ctx.setLineDash([4, 4]);
-      ctx.strokeStyle = cssVar('--text-muted');
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      ctx.moveTo(x, chartArea.top);
-      ctx.lineTo(x, chartArea.bottom);
-      ctx.stroke();
-      ctx.setLineDash([]);
-      ctx.restore();
+      let labelRow = 0;
+      markers.forEach(marker => {
+        if (marker.x == null) return;
+        const x = scales.x.getPixelForValue(marker.x);
+        if (x < chartArea.left || x > chartArea.right) return;
+        const color = cssVar(marker.colorVar);
+        ctx.save();
+        ctx.setLineDash([4, 4]);
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x, chartArea.top);
+        ctx.lineTo(x, chartArea.bottom);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.font = '600 11px system-ui, -apple-system, sans-serif';
+        ctx.fillStyle = color;
+        ctx.textBaseline = 'top';
+        const textWidth = ctx.measureText(marker.label).width;
+        const flip = x + 4 + textWidth > chartArea.right;
+        ctx.textAlign = flip ? 'right' : 'left';
+        ctx.fillText(marker.label, flip ? x - 4 : x + 4, chartArea.top + 4 + labelRow * 15);
+        labelRow++;
+        ctx.restore();
+      });
     }
   };
 
@@ -939,7 +991,7 @@
     data: {
       datasets: [
         {
-          label: 'Normál célgörbe',
+          label: 'Normál görbe',
           data: [],
           borderColor: cssVar('--series-1'),
           backgroundColor: cssVar('--series-1') + '1a',
@@ -954,7 +1006,7 @@
           order: 2,
         },
         {
-          label: 'Coast FIRE célgörbe',
+          label: 'Coast FI görbe',
           data: [],
           borderColor: cssVar('--series-2'),
           borderWidth: 2,
@@ -983,7 +1035,7 @@
           order: 1,
         },
         {
-          label: 'Coast FIRE pont',
+          label: 'Coast FI pont',
           data: [],
           showLine: false,
           borderColor: cssVar('--series-2'),
@@ -1015,7 +1067,7 @@
           order: 0,
         },
         {
-          label: 'FIRE célgörbe',
+          label: 'FIRE görbe',
           data: [],
           borderColor: cssVar('--series-4'),
           backgroundColor: cssVar('--series-4') + '1a',
@@ -1147,6 +1199,13 @@
     subFinal: document.getElementById('subFinal'),
     statFinal: document.getElementById('statFinal'),
     chartNote: document.getElementById('chartNote'),
+    contribGrid: document.getElementById('contribGrid'),
+    valContribNormal: document.getElementById('valContribNormal'),
+    subContribNormal: document.getElementById('subContribNormal'),
+    valContribCoast: document.getElementById('valContribCoast'),
+    subContribCoast: document.getElementById('subContribCoast'),
+    valContribFire: document.getElementById('valContribFire'),
+    subContribFire: document.getElementById('subContribFire'),
   };
 
   function setStatClass(statEl, mode) {
@@ -1216,20 +1275,23 @@
     chart.data.datasets[2].hidden = activeMode === 'coast';
     chart.data.datasets[3].hidden = activeMode === 'fire';
     chart.data.datasets[4].hidden = activeMode === 'coast';
-    const markerMonth = activeMode === 'fire'
-      ? result.fireMonth
-      : activeMode === 'compare'
-        ? (result.fireMonth !== null ? result.fireMonth : result.coastMonth)
-        : result.coastMonth;
-    chart.$coastMarker = { x: markerMonth !== null ? markerMonth / 12 : null };
+    chart.$markers = [];
+    if (activeMode !== 'fire' && result.coastMonth !== null) {
+      chart.$markers.push({ x: result.coastMonth / 12, label: 'Coast FI pont', colorVar: '--series-2' });
+    }
+    if (activeMode !== 'coast' && result.fireMonth !== null) {
+      chart.$markers.push({ x: result.fireMonth / 12, label: 'FIRE pont', colorVar: '--series-3' });
+    }
+    chart.$markers.push({ x: result.retireMonths / 12, label: 'Nyugdíjkorhatár', colorVar: '--text-muted' });
     chart.update('none');
 
+    refs.contribGrid.hidden = activeMode !== 'compare';
     const today = new Date();
     const infMonthly = Math.pow(1 + input.annualInflation, 1 / 12) - 1;
 
     if (activeMode === 'coast') {
-      refs.labelCoastTime.textContent = 'Coast FIRE eléréséig';
-      refs.labelCoastAmount.textContent = 'Coast FIRE összeg';
+      refs.labelCoastTime.textContent = 'Coast FI eléréséig';
+      refs.labelCoastAmount.textContent = 'Coast FI összeg';
       refs.labelTarget.textContent = 'Szükséges tőke nyugdíjkor';
       refs.labelFinal.textContent = 'Portfólió értéke nyugdíjkor';
 
@@ -1265,7 +1327,7 @@
       refs.valFinal.textContent = huf.format(Math.round(result.portfolioAtRetire));
       refs.subFinal.innerHTML = 'folyamatos befizetés esetén<br>havi ' + huf.format(Math.round(presentValueMonthlyWithdrawal)) + ' jelenértéken';
       setStatClass(refs.statFinal, result.portfolioAtRetire >= result.fvTarget ? 'ok' : 'warn');
-      refs.chartNote.textContent = 'A Coast görbe nyugdíjkorig a nyugdíjkori cél visszadiszkontált értéke (a metszés után elméletileg leállhatsz a befizetéssel), nyugdíjkortól pedig a cél havi kivétet levonva halad tovább. A portfólió nyugdíjkorig folyamatos befizetéssel, utána a cél havi kivét (inflációval növelt) levonásával halad a tervezett élethosszig.';
+      refs.chartNote.textContent = 'A Coast FI görbe nyugdíjkorig a nyugdíjkori cél visszadiszkontált értéke (a metszés után elméletileg leállhatsz a befizetéssel), nyugdíjkortól pedig a cél havi kivétet levonva halad tovább. A Normál görbe nyugdíjkorig folyamatos befizetéssel, utána a cél havi kivét (inflációval növelt) levonásával halad a tervezett élethosszig.';
       return;
     }
 
@@ -1314,7 +1376,7 @@
         setStatClass(refs.statFinal, null);
       }
 
-      refs.chartNote.textContent = 'A portfólió a FIRE pontig befizetéssel, utána a cél havi kivét (inflációval növelt) havonkénti levonásával halad a tervezett élethosszig.';
+      refs.chartNote.textContent = 'A FIRE görbe a FIRE pontig folyamatos befizetéssel, utána a cél havi kivét (inflációval növelt) havonkénti levonásával halad a tervezett élethosszig.';
       return;
     }
 
@@ -1351,7 +1413,23 @@
       refs.subFinal.textContent = 'plusz havi befizetés kell a FIRE célhoz';
       setStatClass(refs.statFinal, 'warn');
     }
-    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast FIRE célgörbét és a FIRE célszámot, valamint a Normál célgörbét (befizetés nyugdíjkorig) és a FIRE célgörbét (befizetés a FIRE pontig), mindkettőt a cél havi kivét levonásával.';
+    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast FI görbét, a FIRE görbét (befizetés a FIRE pontig), valamint a normál görbét (befizetés a nyugdíjkorhatárig). A különbség abban rejlik, hogy meddig történik befizetés és mikor kezdődik a cél havi kivét. A Coast FI görbe nyugdíjkorig a nyugdíjkori cél visszadiszkontált értéke (a metszés után elméletileg leállhatsz a befizetéssel), nyugdíjkortól pedig a cél havi kivétet levonva halad tovább. A FIRE görbe a FIRE pontig folyamatos befizetéssel, utána a cél havi kivét (inflációval növelt) havonkénti levonásával halad a tervezett élethosszig. A Normál görbe nyugdíjkorig folyamatos befizetéssel, utána a cél havi kivét (inflációval növelt) levonásával halad a tervezett élethosszig.';
+
+    // ---- Összes befizetés kártyák ----
+    const fillContrib = (valEl, subEl, months, missingText) => {
+      if (months === null) {
+        valEl.textContent = '—';
+        subEl.textContent = missingText;
+        return;
+      }
+      const totals = result.contributionTotals[months];
+      valEl.textContent = huf.format(Math.round(totals.nominal));
+      subEl.innerHTML = 'mai értéken: ' + huf.format(Math.round(totals.real)) + '<br>' +
+        (months === 0 ? 'nincs további befizetés' : formatDuration(months) + ' · ' + formatAgeLabel(input.currentAge + months / 12) + ' éves korig');
+    };
+    fillContrib(refs.valContribNormal, refs.subContribNormal, result.retireMonths, '');
+    fillContrib(refs.valContribCoast, refs.subContribCoast, result.coastMonth, 'nincs Coast FI pont nyugdíjig');
+    fillContrib(refs.valContribFire, refs.subContribFire, result.fireMonth, 'nincs FIRE pont a tervezett élethosszig');
   }
 
   updateModeUI();
