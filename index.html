@@ -170,14 +170,83 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
+    position: relative;
     width: 16px;
     height: 16px;
     border-radius: 999px;
-    border: 1px solid var(--border);
-    color: var(--text-muted);
+    border: 1px solid color-mix(in srgb, var(--series-1) 28%, var(--border));
+    color: var(--series-1);
+    background: color-mix(in srgb, var(--series-1) 10%, var(--surface-1));
     font-size: 11px;
     cursor: help;
     margin-left: 4px;
+    font-style: normal;
+    font-weight: 700;
+    line-height: 1;
+    user-select: none;
+  }
+  .help-tip::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 10px);
+    transform: translateX(-50%) translateY(4px);
+    min-width: 180px;
+    max-width: 240px;
+    padding: 9px 11px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--surface-1);
+    color: var(--text-primary);
+    box-shadow: var(--shadow);
+    font-size: 12px;
+    font-weight: 500;
+    line-height: 1.45;
+    text-transform: none;
+    letter-spacing: 0;
+    white-space: normal;
+    text-align: left;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+    z-index: 20;
+  }
+  .help-tip::before {
+    content: "";
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 4px);
+    transform: translateX(-50%) translateY(4px) rotate(45deg);
+    width: 8px;
+    height: 8px;
+    background: var(--surface-1);
+    border-right: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: opacity 0.12s ease, transform 0.12s ease, visibility 0.12s ease;
+    z-index: 19;
+  }
+  .help-tip:hover::after,
+  .help-tip:focus-visible::after,
+  .help-tip:hover::before,
+  .help-tip:focus-visible::before {
+    opacity: 1;
+    visibility: visible;
+  }
+  .help-tip:hover::after,
+  .help-tip:focus-visible::after {
+    transform: translateX(-50%) translateY(0);
+  }
+  .help-tip:hover::before,
+  .help-tip:focus-visible::before {
+    transform: translateX(-50%) translateY(0) rotate(45deg);
+  }
+  .help-tip:focus-visible {
+    outline: 2px solid color-mix(in srgb, var(--series-1) 45%, transparent);
+    outline-offset: 2px;
   }
   .input-grid {
     display: grid;
@@ -411,7 +480,7 @@
       <div class="field">
         <label for="currentAge">Jelenlegi életkor</label>
         <div class="suffix-row">
-          <input type="number" id="currentAge" min="16" max="85" step="1" value="31.25">
+          <input type="number" id="currentAge" min="16" max="85" step="1" value="31.5">
           <span class="unit">év</span>
         </div>
       </div>
@@ -435,7 +504,7 @@
       <div class="field money">
         <label for="currentInvestment">Jelenlegi befektetés összege</label>
         <div class="suffix-row">
-          <input type="text" inputmode="numeric" id="currentInvestment" value="18 500 000">
+          <input type="text" inputmode="numeric" id="currentInvestment" value="19 500 000">
           <span class="unit">Ft</span>
         </div>
       </div>
@@ -443,16 +512,16 @@
       <div class="field money">
         <label for="targetWithdrawal">Cél havi kivét nyugdíjkor <span style="color:var(--text-muted); font-weight:400;">(mai értéken)</span></label>
         <div class="suffix-row">
-          <input type="text" inputmode="numeric" id="targetWithdrawal" value="525 000">
+          <input type="text" inputmode="numeric" id="targetWithdrawal" value="508 000">
           <span class="unit">Ft</span>
         </div>
       </div>
 
       <div class="field pct-field">
-        <label for="annualReturnNum">Portfólió hozama / év</label>
+        <label for="annualReturnNum">Portfólió hozama / év<span class="help-tip" tabindex="0" role="note" aria-label="FTSE All-World index historikus hozama 9,67% - alapkezelői 0,22%-os éves díj" data-tip="FTSE All-World index historikus hozama 9,67% - alapkezelői 0,22%-os éves díj">i</span></label>
         <div class="pct-row">
-          <input type="range" id="annualReturn" min="0" max="15" step="0.1" value="9.44">
-          <input type="number" id="annualReturnNum" min="0" max="15" step="0.1" value="9.44">
+          <input type="range" id="annualReturn" min="0" max="15" step="0.1" value="9.45">
+          <input type="number" id="annualReturnNum" min="0" max="15" step="0.1" value="9.45">
           <span class="pct-unit">%</span>
         </div>
       </div>
@@ -467,7 +536,7 @@
       </div>
 
       <div class="field pct-field">
-        <label for="swrNum">Kivételi ráta / év <span style="color:var(--text-muted); font-weight:400;">(SWR)</span><span class="help-tip" title="Korai FIRE esetén általában nem javallott 4% feletti érték.">i</span></label>
+        <label for="swrNum">Kivételi ráta / év <span style="color:var(--text-muted); font-weight:400;">(SWR)</span><span class="help-tip" tabindex="0" role="note" aria-label="Korai FIRE esetén általában nem javallott 4% feletti érték." data-tip="Korai FIRE esetén általában nem javallott 4% feletti érték.">i</span></label>
         <div class="pct-row">
           <input type="range" id="swr" min="2" max="7" step="0.1" value="3.5">
           <input type="number" id="swrNum" min="2" max="7" step="0.1" value="3.5">
@@ -477,9 +546,9 @@
     </div>
     <div class="input-grid mode-fields" id="modeFields">
       <div class="field">
-        <label for="maxAge">Maximális horizont</label>
+        <label for="plannedLifespan">Tervezett élethossz</label>
         <div class="suffix-row">
-          <input type="number" id="maxAge" min="20" max="100" step="1" value="70">
+          <input type="number" id="plannedLifespan" min="20" max="120" step="1" value="90">
           <span class="unit">év</span>
         </div>
       </div>
@@ -538,7 +607,19 @@
   </section>
 
   <footer class="disclaimer">
-    A számítás egyszerűsített, kamatos kamatos modellt használ (havi tőkésítéssel), és nem veszi figyelembe az adózást, díjakat vagy a hozamok ingadozását. Kizárólag tájékoztató jellegű, nem minősül pénzügyi tanácsadásnak. Ha szeretnél támogatni Revolut-on keresztül a <b class="selectable">@dorqa95</b> felhasználói fiókomon tudsz segíteni. Ha szeretnéd velem közösen átbeszélni a pénzügyeidet online mentorálás keretén belül, akkor <a href="https://tidycal.com/kekesidori/mentoralas" target="_blank">itt</a> tudsz jelentkezni.
+    A számítás egyszerűsített, kamatos kamatos modellt használ (havi tőkésítéssel), és nem veszi figyelembe az adózást,
+    díjakat vagy a hozamok ingadozását. Kizárólag tájékoztató jellegű, nem minősül pénzügyi tanácsadásnak. Ha szeretnél
+    támogatni Revolut-on keresztül a <b class="selectable">@dorqa95</b> felhasználói fiókomon tudsz segíteni. Ha szeretnéd
+    velem közösen átbeszélni a pénzügyeidet online mentorálás keretén belül, akkor <a
+      href="https://tidycal.com/kekesidori/mentoralas" target="_blank">itt</a> tudsz jelentkezni.
+    <br><br>
+    <b>Kalkulációs adatok forrásai:</b>
+    <ul>
+      <li>FTSE All-World index historikus hozama 2003-2026 között átlagosan <a href="https://curvo.eu/backtest/en/market-index/ftse-all-world?currency=usd" target="_blank">9,67%</a>, ugyanezen időszakra az infláció pedig <a href="https://www.in2013dollars.com/us/inflation/2003" target="_blank">2,63%</a> volt</li>
+      <li>A Vanguard VWRA alapkezelői díja <a href="https://www.citadele.lt/storage/app/media/funds/kid/IE00BK5BQT80_en.pdf" target="_blank">0,22%</a>/év, ami az index hozamot csökkenti</li>
+      <li>A 4% SWR a <a href="https://www.aaii.com/files/pdf/6794_retirement-savings-choosing-a-withdrawal-rate-that-is-sustainable.pdf" target="_blank">Trinity tanulmányban</a> szereplő 30 éves időtávra vonatkozik, amely a történelmi adatok alapján nagy valószínűséggel biztosítja a tőke megőrzését</li>
+      <li>A forint 1972-tól 2026-ig évente átlagosan <a href="https://www.mnb.hu/arfolyam-tablazat?deviza=rbCurrencySelect&devizaSelected=USD&datefrom=1972.+01.+01.&datetill=2026.+10.+18.&order=1" target="_blank">4,6%</a>-kal inflálódott, ami közel megegyezik a két ország inflációkülönbségével: <a href="https://www.in2013dollars.com/us/inflation/1972" target="_blank">8,63%</a>-<a href="https://www.in2013dollars.com/hungary/inflation/1972" target="_blank">3,94%</a>=4,69%, emiatt számolok forinttal a kalkulátorban</li>
+    </ul>
   </footer>
 </div>
 
@@ -588,7 +669,7 @@
     annualInflationNum: document.getElementById('annualInflationNum'),
     swr: document.getElementById('swr'),
     swrNum: document.getElementById('swrNum'),
-    maxAge: document.getElementById('maxAge'),
+    plannedLifespan: document.getElementById('plannedLifespan'),
     inflationLinkedContribution: document.getElementById('inflationLinkedContribution'),
   };
 
@@ -615,7 +696,7 @@
   syncPair(els.annualInflation, els.annualInflationNum);
   syncPair(els.swr, els.swrNum);
 
-  [els.currentAge, els.retireAge, els.maxAge].forEach(el => el.addEventListener('input', recalc));
+  [els.currentAge, els.retireAge, els.plannedLifespan].forEach(el => el.addEventListener('input', recalc));
   els.inflationLinkedContribution.addEventListener('change', recalc);
 
   els.modeSwitch.querySelectorAll('[data-mode]').forEach(btn => {
@@ -657,7 +738,7 @@
   // ---------- Coast + FIRE simulation ----------
   function simulate(input) {
     const retireMonths = Math.round((input.retireAge - input.currentAge) * 12);
-    const horizonMonths = Math.round((Math.max(input.retireAge, input.maxAge) - input.currentAge) * 12);
+    const horizonMonths = Math.round((Math.max(input.retireAge, input.plannedLifespan) - input.currentAge) * 12);
     if (retireMonths <= 0 || horizonMonths <= 0) return null;
 
     const rMonthly = Math.pow(1 + input.annualReturn, 1 / 12) - 1;
@@ -669,6 +750,7 @@
     let portfolio = input.currentInvestment;
     let contributionsPaid = 0;
     const portfolioSeries = [];
+    const accumulationSeries = [];
     const coastSeries = [];
     const fireSeries = [];
     let coastMonth = null;
@@ -683,7 +765,7 @@
       const monthsRemaining = Math.max(0, retireMonths - m);
       const coastNeed = fvTarget / Math.pow(1 + rMonthly, monthsRemaining);
       const fireNeed = needAt(m, input.swr);
-      portfolioSeries.push({ x: m / 12, y: portfolio });
+      accumulationSeries.push({ x: m / 12, y: portfolio });
       coastSeries.push({ x: m / 12, y: coastNeed });
       fireSeries.push({ x: m / 12, y: fireNeed });
 
@@ -704,6 +786,24 @@
           (input.indexContributions ? Math.pow(1 + infMonthly, m) : 1);
         portfolio = portfolio * (1 + rMonthly) + contributionNow;
         contributionsPaid += contributionNow;
+      }
+    }
+
+    if (fireMonth === null) {
+      portfolioSeries.push(...accumulationSeries);
+    } else {
+      const fireBasePortfolio = accumulationSeries[fireMonth].y;
+      const baseMonthlyWithdrawal = fireBasePortfolio * input.swr / 12;
+      let postFirePortfolio = fireBasePortfolio;
+      for (let m = 0; m <= horizonMonths; m++) {
+        if (m <= fireMonth) {
+          portfolioSeries.push(accumulationSeries[m]);
+          continue;
+        }
+        const monthsSinceFire = m - fireMonth;
+        const withdrawalNow = baseMonthlyWithdrawal * Math.pow(1 + infMonthly, monthsSinceFire - 1);
+        postFirePortfolio = postFirePortfolio * (1 + rMonthly) - withdrawalNow;
+        portfolioSeries.push({ x: m / 12, y: postFirePortfolio });
       }
     }
 
@@ -790,7 +890,7 @@
     data: {
       datasets: [
         {
-          label: 'Portfólió (befizetésekkel)',
+          label: 'Tervezett portfólió (FIRE-ig befizetés, utána kivét)',
           data: [],
           borderColor: cssVar('--series-1'),
           backgroundColor: cssVar('--series-1') + '1a',
@@ -994,7 +1094,7 @@
     const input = {
       currentAge: parseFloat(els.currentAge.value),
       retireAge: parseFloat(els.retireAge.value),
-      maxAge: parseFloat(els.maxAge.value),
+      plannedLifespan: parseFloat(els.plannedLifespan.value),
       monthlyContribution: parseMoney(els.monthlyContribution),
       currentInvestment: parseMoney(els.currentInvestment),
       targetWithdrawal: parseMoney(els.targetWithdrawal),
@@ -1016,8 +1116,8 @@
       errorBanner.classList.add('show');
       return;
     }
-    if (input.maxAge <= input.currentAge) {
-      errorBanner.textContent = 'A maximális horizont életkornak nagyobbnak kell lennie a jelenlegi életkornál.';
+    if (input.plannedLifespan <= input.currentAge) {
+      errorBanner.textContent = 'A tervezett élethossznak nagyobbnak kell lennie a jelenlegi életkornál.';
       errorBanner.classList.add('show');
       return;
     }
@@ -1096,21 +1196,21 @@
       refs.labelFinal.textContent = 'Összes befizetés';
 
       if (result.fireMonth === null) {
-        refs.valCoastTime.textContent = 'Nincs metszés horizontig';
+        refs.valCoastTime.textContent = 'Nincs metszés a tervezett élethosszig';
         setStatClass(refs.statCoastTime, 'warn');
         if (result.projectedFireMonth !== null) {
-          refs.subCoastTime.textContent = 'Kb. +' + formatDuration(result.projectedFireMonth - result.horizonMonths) + ' a max. horizont után.';
+          refs.subCoastTime.textContent = 'Kb. +' + formatDuration(result.projectedFireMonth - result.horizonMonths) + ' a tervezett élethossz után.';
         } else {
           refs.subCoastTime.textContent = 'A jelenlegi paraméterek mellett még jóval utána sem látszik metszés.';
         }
         refs.valCoastAmount.textContent = huf.format(Math.round(result.fireNeedAtHorizon));
-        refs.subCoastAmount.textContent = 'szükséges tőke a max. horizonton';
+        refs.subCoastAmount.textContent = 'szükséges tőke a tervezett élethossznál';
         setStatClass(refs.statCoastAmount, null);
         refs.valTarget.textContent = huf.format(Math.round(result.fireGapAtHorizon));
-        refs.subTarget.textContent = 'hiányzó tőke a horizont végén';
+        refs.subTarget.textContent = 'hiányzó tőke a tervezett élethossznál';
         setStatClass(refs.statTarget, 'warn');
         refs.valFinal.textContent = huf.format(Math.round(result.missingMonthlyContribution));
-        refs.subFinal.innerHTML = 'plusz havi befizetés a célhoz<br>' + formatAgeLabel(input.maxAge) + ' éves korig';
+        refs.subFinal.innerHTML = 'plusz havi befizetés a célhoz<br>' + formatAgeLabel(input.plannedLifespan) + ' éves korig';
         setStatClass(refs.statFinal, 'warn');
       } else {
         setStatClass(refs.statCoastTime, 'accent');
@@ -1134,7 +1234,7 @@
         setStatClass(refs.statFinal, null);
       }
 
-      refs.chartNote.textContent = 'A FIRE görbe az azonnali kivétet fedező szükséges tőkét mutatja; a metszéspontnál elérhető a teljes pénzügyi függetlenség.';
+      refs.chartNote.textContent = 'A tervezett portfólió görbe a FIRE pontig befizetésekkel, utána az SWR-rel számolt kivéttel és az inflációkövetéssel halad tovább.';
       return;
     }
 
@@ -1148,7 +1248,7 @@
     setStatClass(refs.statCoastTime, result.coastMonth === null ? 'warn' : 'accent');
 
     refs.valCoastAmount.textContent = result.fireMonth === null ? '—' : formatDuration(result.fireMonth);
-    refs.subCoastAmount.textContent = result.fireMonth === null ? 'nincs metszés horizontig' : ('kb. ' + formatAgeLabel(input.currentAge + result.fireMonth / 12) + ' évesen');
+    refs.subCoastAmount.textContent = result.fireMonth === null ? 'nincs metszés a tervezett élethosszig' : ('kb. ' + formatAgeLabel(input.currentAge + result.fireMonth / 12) + ' évesen');
     setStatClass(refs.statCoastAmount, result.fireMonth === null ? 'warn' : 'ok');
 
     if (result.coastMonth !== null && result.fireMonth !== null) {
@@ -1164,14 +1264,14 @@
     if (result.fireMonth !== null) {
       const gainYears = input.retireAge - (input.currentAge + result.fireMonth / 12);
       refs.valFinal.textContent = (gainYears >= 0 ? '+' : '-') + formatYearValue(Math.abs(gainYears));
-      refs.subFinal.textContent = 'korábbi/későbbi pénzügyi függetlenség';
+      refs.subFinal.textContent = 'hivatalos nyugdíjkorhatárhoz képest';
       setStatClass(refs.statFinal, gainYears >= 0 ? 'ok' : 'warn');
     } else {
       refs.valFinal.textContent = huf.format(Math.round(result.missingMonthlyContribution));
       refs.subFinal.textContent = 'plusz havi befizetés kell a FIRE célhoz';
       setStatClass(refs.statFinal, 'warn');
     }
-    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast és FIRE célgörbéket, illetve a két metszéspontot.';
+    refs.chartNote.textContent = 'Összehasonlítás módban egyszerre látod a Coast és FIRE célgörbéket, illetve a tervezett portfólió menetét a FIRE utáni kivételéssel együtt.';
   }
 
   updateModeUI();
